@@ -1,0 +1,10 @@
+- Move the snake in the direction in every moment
+- Change the snake direction with keyboard arrow keys / WASD
+- Eat food with the snake (snake grows, food disappears)
+- Produce new food after consuming the previously generated food
+- Do not allow the snake to eat itself (cross itself) or go out of bounds (maybe draw bounds also)
+- Create a win condition and a pointing system
+- Offer to play a new game
+- Move X and O to Constants, and try to find better characters to represent snake body parts and food (distinguish snake head!)
+- Colorize the food and the snake
+- Create a graphical and/or a web interface for the game
