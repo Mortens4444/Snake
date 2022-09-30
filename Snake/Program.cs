@@ -6,7 +6,7 @@
         {
             Console.CursorVisible = false;
             var foodGenerated = false;
-            Location foodLocation = new(0, 0);
+            Location? foodLocation = null;
             ConsoleKeyInfo consoleKeyInfo = new();
             var random = new Random();
             do
@@ -17,9 +17,14 @@
                 }
                
                 var snake = new SnakeBody();
+                if (snake.Head.Equals(foodLocation))
+                {
+                    foodGenerated = false;
+                }
+
                 for (int i = 0; i < snake.SnakeParts.Count; i++)
                 {
-                    DrawItem(snake.SnakeParts[i], 'X');
+                    DrawItem(snake.SnakeParts[i].Item1, 'X', snake.SnakeParts[i].Item2);
                 }
 
                 if (!foodGenerated) 
@@ -27,16 +32,20 @@
                     foodLocation = new Location(random.Next(Constants.MaxX), random.Next(Constants.MaxY));
                     foodGenerated = true;
                 }
-                DrawItem(foodLocation, 'O');
+                DrawItem(foodLocation, 'O', ConsoleColor.Red);
             } while (consoleKeyInfo.Key != ConsoleKey.Escape);
         }
 
-        static void DrawItem(Location location, char ch)
+        static void DrawItem(Location? location, char ch, ConsoleColor color)
         {
-            Program.DrawItem(location.X, location.Y, ch);
+            if (location == null)
+            {
+                return;
+            }
+            Program.DrawItem(location.X, location.Y, ch, color);
         }
 
-        static void DrawItem(int x, int y, char ch)
+        static void DrawItem(int x, int y, char ch, ConsoleColor color)
         {
             Console.CursorLeft = 0;
             Console.CursorTop = 0;
@@ -44,6 +53,7 @@
             {
                 Console.WriteLine();
             }
+            Console.ForegroundColor = color;
             Console.WriteLine(ch.ToString().PadLeft(x, ' '));
         }
     }
