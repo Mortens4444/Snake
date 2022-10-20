@@ -1,5 +1,4 @@
-- Move the snake in the direction in every moment
-- Change the snake direction with keyboard arrow keys / WASD
+- Do not let the snake leave the area
 - Eat food with the snake (snake grows)
 - Do not allow the snake to eat itself (cross itself) or go out of bounds (maybe draw bounds also)
 - Create a win condition and a pointing system

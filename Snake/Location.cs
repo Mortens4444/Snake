@@ -1,6 +1,6 @@
 ﻿namespace Snake
 {
-    internal class Location : IEquatable<Location>
+    public class Location : IEquatable<Location>
     {
         public Location(int x, int y)
         {
