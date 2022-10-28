@@ -1,8 +1,11 @@
+- Make head visible when moving left
+- Flickering
+- Can move backwards (can go inside itself)
 - Do not let the snake leave the area
 - Eat food with the snake (snake grows)
 - Do not allow the snake to eat itself (cross itself) or go out of bounds (maybe draw bounds also)
 - Create a win condition and a pointing system
 - Offer to play a new game
-- Move X and O to Constants, and try to find better characters to represent snake body parts and food (distinguish snake head!)
+- Move O to Constants, and try to find better characters to represent snake body parts and food (distinguish snake head!)
 - Create a graphical and/or a web interface for the game
-- Remove Tuple from SnakeBody.cs
+- Create game menu

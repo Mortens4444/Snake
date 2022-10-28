@@ -12,46 +12,69 @@
             var snake = new SnakeBody();
             do
             {
-                if (Console.KeyAvailable)
-                { 
-                    consoleKeyInfo = Console.ReadKey(true);
-                    if (consoleKeyInfo.Key == ConsoleKey.UpArrow)
-                    {
-                        snake.Direction = Direction.Up;
-                    }
-                    else if (consoleKeyInfo.Key == ConsoleKey.DownArrow)
-                    {
-                        snake.Direction = Direction.Down;
-                    }
-                    else if (consoleKeyInfo.Key == ConsoleKey.LeftArrow)
-                    {
-                        snake.Direction = Direction.Left;
-                    }
-                    else if (consoleKeyInfo.Key == ConsoleKey.RightArrow)
-                    {
-                        snake.Direction = Direction.Right;
-                    }
-                }
-               
+                consoleKeyInfo = SetSnakeDirection(consoleKeyInfo, snake);
+
                 if (snake.Head.Equals(foodLocation))
                 {
                     foodGenerated = false;
                 }
 
-                for (int i = 0; i < snake.SnakeParts.Count; i++)
-                {
-                    DrawItem(snake.SnakeParts[i].Location, snake.SnakeParts[i].DisplayChar, snake.SnakeParts[i].Color);
-                }
-
-                if (!foodGenerated) 
+                if (!foodGenerated)
                 {
                     foodLocation = new Location(random.Next(Constants.MaxX), random.Next(Constants.MaxY));
                     foodGenerated = true;
                 }
-                DrawItem(foodLocation, 'O', ConsoleColor.Red);
                 snake.Move();
-                Thread.Sleep(100);
+                DrawScreen(foodLocation, snake);
+                Thread.Sleep(150);
             } while (consoleKeyInfo.Key != ConsoleKey.Escape);
+        }
+
+        private static ConsoleKeyInfo SetSnakeDirection(ConsoleKeyInfo consoleKeyInfo, SnakeBody snake)
+        {
+            if (Console.KeyAvailable)
+            {
+                consoleKeyInfo = Console.ReadKey(true);
+                if (consoleKeyInfo.Key == ConsoleKey.UpArrow)
+                {
+                    snake.Direction = Direction.Up;
+                }
+                else if (consoleKeyInfo.Key == ConsoleKey.DownArrow)
+                {
+                    snake.Direction = Direction.Down;
+                }
+                else if (consoleKeyInfo.Key == ConsoleKey.LeftArrow)
+                {
+                    snake.Direction = Direction.Left;
+                }
+                else if (consoleKeyInfo.Key == ConsoleKey.RightArrow)
+                {
+                    snake.Direction = Direction.Right;
+                }
+            }
+
+            return consoleKeyInfo;
+        }
+
+        private static void DrawScreen(Location? foodLocation, SnakeBody snake)
+        {
+            ClearScreen();
+            for (int i = 0; i < snake.SnakeParts.Count; i++)
+            {
+                DrawItem(snake.SnakeParts[i]);
+            }
+
+            DrawItem(foodLocation, 'O', ConsoleColor.Red);
+        }
+
+        private static void ClearScreen()
+        {
+            Console.Clear();
+        }
+
+        static void DrawItem(SnakePartInfo snakePartInfo)
+        {
+            Program.DrawItem(snakePartInfo.Location, snakePartInfo.DisplayChar, snakePartInfo.Color);
         }
 
         static void DrawItem(Location? location, char ch, ConsoleColor color)

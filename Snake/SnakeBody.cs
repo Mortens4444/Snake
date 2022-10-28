@@ -14,23 +14,25 @@
 
         public void Move() 
         {
-            for (int i = 0; i < SnakeParts.Count; i++)
+            for (int i = SnakeParts.Count - 1; i > 0; i--)
             {
-                switch (Direction)
-                {
-                    case Direction.Up:
-                        SnakeParts[i].Location = new Location(SnakeParts[i].Location.X, SnakeParts[i].Location.Y - 1);
-                        break;
-                    case Direction.Down:
-                        SnakeParts[i].Location = new Location(SnakeParts[i].Location.X, SnakeParts[i].Location.Y + 1);
-                        break;
-                    case Direction.Left:
-                        SnakeParts[i].Location = new Location(SnakeParts[i].Location.X - 1, SnakeParts[i].Location.Y);
-                        break;
-                    case Direction.Right:
-                        SnakeParts[i].Location = new Location(SnakeParts[i].Location.X + 1, SnakeParts[i].Location.Y);
-                        break;
-                }
+                SnakeParts[i].Location.X = SnakeParts[i - 1].Location.X;
+                SnakeParts[i].Location.Y = SnakeParts[i - 1].Location.Y;
+            }
+            switch (Direction)
+            {
+                case Direction.Up:
+                    Head.Y -= 1;
+                    break;
+                case Direction.Down:
+                    Head.Y += 1;
+                    break;
+                case Direction.Left:
+                    Head.X -= 1;
+                    break;
+                case Direction.Right:
+                    Head.X += 1;
+                    break;
             }
         }
     }

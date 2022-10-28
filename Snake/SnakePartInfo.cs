@@ -1,5 +1,8 @@
-﻿namespace Snake
+﻿using System.Diagnostics;
+
+namespace Snake
 {
+    [DebuggerDisplay("{Location.X}, {Location.Y}")]
     public class SnakePartInfo
     {
         public Location Location { get; set; }
