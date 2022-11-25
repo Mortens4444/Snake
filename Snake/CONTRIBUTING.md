@@ -6,8 +6,5 @@
 - Offer to play a new game
 - Create game menu
 
-- Do not let the snake leave the area
-- Eat food with the snake (snake grows)
 - Create a win condition and a pointing system
-- Try to find better characters to represent snake body parts and food
 - Create a graphical and/or a web interface for the game

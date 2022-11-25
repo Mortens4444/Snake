@@ -36,4 +36,14 @@ public class Snake
                 break;
         }
     }
+
+    public bool HasTouchedFood(FoodInfo foodInfo) 
+    {
+        var result = Head.Equals(foodInfo?.Location);
+        if (result)
+        {
+            SnakeBodyParts.Add(new SnakeBodyPartInfo(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY + 2), ConsoleColor.Blue));
+        }
+        return result;
+    }
 }

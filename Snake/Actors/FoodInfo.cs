@@ -4,7 +4,7 @@ namespace SnakeGameEngine.Actors;
 
 public class FoodInfo : ElementInfo
 {
-    public override char DisplayChar => 'O';
+    public override string DisplayChar => "🍎";
 
     public FoodInfo(Location location)
         : base(location, ConsoleColor.Red)

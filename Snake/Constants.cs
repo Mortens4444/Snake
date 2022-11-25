@@ -2,7 +2,7 @@
 
 public static class Constants
 {
-    public const int MaxX = 60;
+    public const int MaxX = 120;
 
     public const int MaxY = 30;
 

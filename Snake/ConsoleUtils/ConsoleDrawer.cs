@@ -41,6 +41,22 @@ namespace SnakeGameEngine.ConsoleUtils
         {
             if (elementInfo != null)
             {
+                if (elementInfo.Location.X == -1)
+                {
+                    elementInfo.Location.X = Constants.MaxX - 1;
+                }
+                if (elementInfo.Location.Y == -1)
+                {
+                    elementInfo.Location.Y = Constants.MaxY - 1;
+                }
+                if (elementInfo.Location.X == Constants.MaxX)
+                {
+                    elementInfo.Location.X = 0;
+                }
+                if (elementInfo.Location.Y == Constants.MaxY)
+                {
+                    elementInfo.Location.Y = 0;
+                }
                 Console.CursorLeft = elementInfo.Location.X;
                 Console.CursorTop = elementInfo.Location.Y;
                 Console.ForegroundColor = elementInfo.Color;

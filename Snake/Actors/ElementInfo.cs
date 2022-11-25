@@ -10,7 +10,7 @@ public class ElementInfo
 
     public ConsoleColor Color { get; }
 
-    public virtual char DisplayChar { get; }
+    public virtual string DisplayChar { get; }
 
     public ElementInfo(Location location, ConsoleColor color)
     {

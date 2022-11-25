@@ -1,6 +1,7 @@
 ﻿using SnakeGameEngine.Actors;
 using SnakeGameEngine.ConsoleUtils;
 using SnakeGameEngine.Moving;
+using System.Text;
 
 namespace SnakeGameEngine
 {
@@ -8,6 +9,7 @@ namespace SnakeGameEngine
     {
         public static void Main()
         {
+            Console.OutputEncoding = Encoding.UTF8;
             Console.CursorVisible = false;
             var foodInfo = GetFood();
             ConsoleKeyInfo consoleKeyInfo = new();
@@ -17,14 +19,14 @@ namespace SnakeGameEngine
             {
                 consoleKeyInfo = SetSnakeDirection(consoleKeyInfo, snake);
 
-                if (snake.Head.Equals(foodInfo?.Location))
+                if (snake.HasTouchedFood(foodInfo))
                 {
                     foodInfo = GetFood();
                 }
 
                 snake.Move();
                 ConsoleDrawer.DrawScreen(foodInfo, snake);
-                Thread.Sleep(100);
+                Thread.Sleep(140);
             } while (consoleKeyInfo.Key != ConsoleKey.Escape);
         }
 
