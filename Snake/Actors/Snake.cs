@@ -14,6 +14,8 @@ public class Snake
 
     public Location Head => SnakeBodyParts.First().Location;
 
+    public Location Tail => SnakeBodyParts.Last().Location;
+
     public void Move()
     {
         for (int i = SnakeBodyParts.Count - 1; i > 0; i--)
@@ -42,8 +44,28 @@ public class Snake
         var result = Head.Equals(foodInfo?.Location);
         if (result)
         {
-            SnakeBodyParts.Add(new SnakeBodyPartInfo(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY + 2), ConsoleColor.Blue));
+            SnakeBodyParts.Add(new SnakeBodyPartInfo(Tail, ConsoleColor.Blue));
         }
         return result;
+    }
+
+    public ConsoleKeyInfo SetDirection()
+    {
+        if (Console.KeyAvailable)
+        {
+            var consoleKeyInfo = Console.ReadKey(true);
+
+            Direction = consoleKeyInfo.Key switch
+            {
+                ConsoleKey.UpArrow => Direction.Up,
+                ConsoleKey.DownArrow => Direction.Down,
+                ConsoleKey.LeftArrow => Direction.Left,
+                ConsoleKey.RightArrow => Direction.Right,
+                _ => Direction
+            };
+
+            return consoleKeyInfo;
+        }
+        return new();
     }
 }
