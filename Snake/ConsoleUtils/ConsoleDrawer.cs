@@ -1,67 +1,50 @@
 ﻿using SnakeGameEngine.Actors;
-using System.Text;
+using SnakeGameEngine.Moving;
 
-namespace SnakeGameEngine.ConsoleUtils
+namespace SnakeGameEngine.ConsoleUtils;
+
+public static class ConsoleDrawer
 {
-    public static class ConsoleDrawer
+    public static void DrawScreen(FoodInfo foodInfo, Snake snake)
     {
-        private static readonly string ClearStringText;
-
-        static ConsoleDrawer()
+        for (int i = 0; i < snake.SnakeBodyParts.Count; i++)
         {
-            var stringBuilder = new StringBuilder();
-            var line = String.Empty.PadLeft(Constants.MaxX, ' ');
-            for (int i = 0; i < Constants.MaxY; i++)
-            {
-                stringBuilder.AppendLine(line);
-            }
-
-            ClearStringText = stringBuilder.ToString();
+            DrawItem(snake.SnakeBodyParts[i]);
         }
 
-        public static void DrawScreen(FoodInfo? foodInfo, Snake snake)
+        DrawItem(foodInfo);
+    }
+
+    public static void ClearLocation(Location location)
+    {
+        Console.SetCursorPosition(location.X, location.Y);
+        Console.Write(" ");
+    }
+
+    private static void DrawItem(ElementInfo elementInfo)
+    {
+        if (elementInfo != null)
         {
-            ClearScreen();
-            for (int i = 0; i < snake.SnakeBodyParts.Count; i++)
+            if (elementInfo.Location.X == -1)
             {
-                DrawItem(snake.SnakeBodyParts[i]);
+                elementInfo.Location.X = Constants.MaxX - 1;
             }
-
-            DrawItem(foodInfo);
-        }
-
-        private static void ClearScreen()
-        {
-            Console.CursorLeft = 0;
-            Console.CursorTop = 0;
-            Console.Write(ClearStringText);
-        }
-
-        private static void DrawItem(ElementInfo? elementInfo)
-        {
-            if (elementInfo != null)
+            if (elementInfo.Location.Y == -1)
             {
-                if (elementInfo.Location.X == -1)
-                {
-                    elementInfo.Location.X = Constants.MaxX - 1;
-                }
-                if (elementInfo.Location.Y == -1)
-                {
-                    elementInfo.Location.Y = Constants.MaxY - 1;
-                }
-                if (elementInfo.Location.X == Constants.MaxX)
-                {
-                    elementInfo.Location.X = 0;
-                }
-                if (elementInfo.Location.Y == Constants.MaxY)
-                {
-                    elementInfo.Location.Y = 0;
-                }
-                Console.CursorLeft = elementInfo.Location.X;
-                Console.CursorTop = elementInfo.Location.Y;
-                Console.ForegroundColor = elementInfo.Color;
-                Console.Write(elementInfo.DisplayChar);
+                elementInfo.Location.Y = Constants.MaxY - 1;
             }
+            if (elementInfo.Location.X == Constants.MaxX)
+            {
+                elementInfo.Location.X = 0;
+            }
+            if (elementInfo.Location.Y == Constants.MaxY)
+            {
+                elementInfo.Location.Y = 0;
+            }
+            Console.CursorLeft = elementInfo.Location.X;
+            Console.CursorTop = elementInfo.Location.Y;
+            Console.ForegroundColor = elementInfo.Color;
+            Console.Write(elementInfo.DisplayChar);
         }
     }
 }

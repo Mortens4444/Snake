@@ -11,12 +11,10 @@ namespace SnakeGameEngine
             ConsoleKeyInfo consoleKeyInfo;
             do
             {
-                var gameEngine = new GameEngine();
-                var menu = new GameMenu();
-                menu.Show();
-                consoleKeyInfo = menu.Choose(gameEngine);
+                GameMenu.Show();
+                consoleKeyInfo = GameMenu.Choose();
             }
-            while (consoleKeyInfo.Key != ConsoleKey.Escape) ;
+            while (consoleKeyInfo.Key != ConsoleKey.Escape);
         }
     }
 }

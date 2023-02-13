@@ -1,4 +1,5 @@
-﻿using SnakeGameEngine.Moving;
+﻿using SnakeGameEngine.Actors.SnakeParts;
+using SnakeGameEngine.Moving;
 
 namespace SnakeGameEngine.Actors;
 
@@ -6,8 +7,8 @@ public class Snake
 {
     public List<SnakeBodyPartInfo> SnakeBodyParts { get; set; } = new()
     {
-        new SnakeBodyPartInfo(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY), ConsoleColor.DarkGreen),
-        new SnakeBodyPartInfo(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY + 1), ConsoleColor.Blue)
+        new Head(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY)),
+        new SnakeBodyPartInfo(new Location(Constants.HalfOfMaxX, Constants.HalfOfMaxY + 1))
     };
 
     public Direction Direction { get; set; } = Direction.Up;
@@ -41,10 +42,10 @@ public class Snake
 
     public bool HasTouchedFood(FoodInfo foodInfo) 
     {
-        var result = Head.Equals(foodInfo?.Location);
+        var result = Head.Equals(foodInfo.Location);
         if (result)
         {
-            SnakeBodyParts.Add(new SnakeBodyPartInfo(Tail, ConsoleColor.Blue));
+            SnakeBodyParts.Add(new SnakeBodyPartInfo(Tail));
         }
         return result;
     }
@@ -57,10 +58,10 @@ public class Snake
 
             Direction = consoleKeyInfo.Key switch
             {
-                ConsoleKey.UpArrow => Direction.Up,
-                ConsoleKey.DownArrow => Direction.Down,
-                ConsoleKey.LeftArrow => Direction.Left,
-                ConsoleKey.RightArrow => Direction.Right,
+                ConsoleKey.UpArrow => Direction == Direction.Down ? Direction.Down : Direction.Up,
+                ConsoleKey.DownArrow => Direction == Direction.Up ? Direction.Up : Direction.Down,
+                ConsoleKey.LeftArrow => Direction == Direction.Right ? Direction.Right : Direction.Left,
+                ConsoleKey.RightArrow => Direction == Direction.Left ? Direction.Left : Direction.Right,
                 _ => Direction
             };
 

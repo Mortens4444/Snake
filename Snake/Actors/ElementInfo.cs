@@ -4,17 +4,16 @@ using SnakeGameEngine.Moving;
 namespace SnakeGameEngine.Actors;
 
 [DebuggerDisplay("Location: {Location.X}, {Location.Y}, Color: {Color}, DisplayChar: {DisplayChar}")]
-public class ElementInfo
+public abstract class ElementInfo
 {
     public Location Location { get; set; }
 
-    public ConsoleColor Color { get; }
+    public abstract ConsoleColor Color { get; }
 
-    public virtual string DisplayChar { get; }
+    public abstract char DisplayChar { get; }
 
-    public ElementInfo(Location location, ConsoleColor color)
+    public ElementInfo(Location location)
     {
         Location = location;
-        Color = color;
     }
 }

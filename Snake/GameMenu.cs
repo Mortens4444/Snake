@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace SnakeGameEngine
+﻿namespace SnakeGameEngine
 {
-    public class GameMenu
+    public static class GameMenu
     {
-        public void Show()
+        public static void Show()
         {
             Console.Clear();
             Console.SetCursorPosition(0, 0);
@@ -14,14 +12,15 @@ namespace SnakeGameEngine
             Console.WriteLine("Quit - ESC");
         }
 
-        public ConsoleKeyInfo Choose(GameEngine gameEngine)
+        public static ConsoleKeyInfo Choose()
         {
             var consoleKeyInfo = Console.ReadKey(true);
 
             switch (consoleKeyInfo.Key)
             {
                 case ConsoleKey.Spacebar:
-                    gameEngine.NewGame();
+                    Console.Clear();
+                    GameEngine.NewGame();
                     break;
 
                 case ConsoleKey.Escape:

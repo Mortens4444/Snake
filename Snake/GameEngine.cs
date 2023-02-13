@@ -1,14 +1,13 @@
 ﻿using SnakeGameEngine.Actors;
 using SnakeGameEngine.ConsoleUtils;
-using SnakeGameEngine.Moving;
 
 namespace SnakeGameEngine
 {
-    public class GameEngine
+    public static class GameEngine
     {
-        public void NewGame() 
+        public static void NewGame() 
         {
-            var foodInfo = GetFood();
+            var foodInfo = FoodProducer.GetFood();
             ConsoleKeyInfo consoleKeyInfo;
             var snake = new Snake();
 
@@ -18,18 +17,15 @@ namespace SnakeGameEngine
 
                 if (snake.HasTouchedFood(foodInfo))
                 {
-                    foodInfo = GetFood();
+                    ConsoleDrawer.ClearLocation(foodInfo.Location);
+                    foodInfo = FoodProducer.GetFood();
                 }
 
+                ConsoleDrawer.ClearLocation(snake.Tail);
                 snake.Move();
                 ConsoleDrawer.DrawScreen(foodInfo, snake);
-                Thread.Sleep(140);
+                Thread.Sleep(100);
             } while (consoleKeyInfo.Key != ConsoleKey.Escape);
-        }
-
-        private static FoodInfo GetFood()
-        {
-            return new FoodInfo(new Location(Random.Shared.Next(Constants.MaxX), Random.Shared.Next(Constants.MaxY)));
         }
     }
 }
