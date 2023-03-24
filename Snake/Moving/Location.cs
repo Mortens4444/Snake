@@ -21,4 +21,14 @@ public class Location : IEquatable<Location>
 
         return X == other.X && Y == other.Y;
     }
+
+    public override bool Equals(object? obj)
+    {
+        return Equals(obj as Location);
+    }
+
+    public override int GetHashCode()
+    {
+        return X.GetHashCode() ^ Y.GetHashCode();
+    }
 }

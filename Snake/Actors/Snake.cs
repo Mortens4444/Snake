@@ -17,6 +17,16 @@ public class Snake
 
     public Location Tail => SnakeBodyParts.Last().Location;
 
+    public bool IsOutOfBounds()
+    {
+        return Head.X < 0 || Head.X >= Constants.MaxX || Head.Y < 0 || Head.Y >= Constants.MaxY;
+    }
+
+    public bool HasCollidedWithItself()
+    {
+        return SnakeBodyParts.Skip(1).Any(bodyPart => bodyPart.Location.Equals(Head));
+    }
+
     public void Move()
     {
         for (int i = SnakeBodyParts.Count - 1; i > 0; i--)
@@ -38,14 +48,20 @@ public class Snake
                 Head.X += 1;
                 break;
         }
+
+        if (IsOutOfBounds() || HasCollidedWithItself())
+        {
+            throw new InvalidOperationException("Game over");
+        }
     }
 
-    public bool HasTouchedFood(FoodInfo foodInfo) 
+    public bool HasTouchedFood(FoodInfo foodInfo)
     {
         var result = Head.Equals(foodInfo.Location);
         if (result)
         {
-            SnakeBodyParts.Add(new SnakeBodyPartInfo(Tail));
+            var newTail = new SnakeBodyPartInfo(Tail);
+            SnakeBodyParts.Insert(SnakeBodyParts.Count - 1, newTail);
         }
         return result;
     }
