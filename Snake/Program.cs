@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using SnakeGameEngine.ConsoleUtils;
+using System.Text;
 
 namespace SnakeGameEngine
 {
@@ -8,6 +9,7 @@ namespace SnakeGameEngine
         {
             Console.OutputEncoding = Encoding.UTF8;
             Console.CursorVisible = false;
+            VirtualTerminal.TryEnable();
             ConsoleKeyInfo consoleKeyInfo;
             do
             {

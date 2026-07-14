@@ -29,6 +29,11 @@ public class Snake
 
     public void Move()
     {
+        if (SnakeBodyParts[0] is SnakeParts.Head headPart)
+        {
+            headPart.Direction = Direction;
+        }
+
         for (int i = SnakeBodyParts.Count - 1; i > 0; i--)
         {
             SnakeBodyParts[i].Location = new Location(SnakeBodyParts[i - 1].Location.X, SnakeBodyParts[i - 1].Location.Y);
@@ -53,6 +58,11 @@ public class Snake
         {
             throw new InvalidOperationException("Game over");
         }
+    }
+
+    public bool HasHitObstacle(List<ObstacleInfo> obstacles)
+    {
+        return obstacles.Any(obstacle => obstacle.Location.Equals(Head));
     }
 
     public bool HasTouchedFood(FoodInfo foodInfo)

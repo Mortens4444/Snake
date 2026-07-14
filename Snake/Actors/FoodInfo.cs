@@ -6,7 +6,7 @@ public class FoodInfo : ElementInfo
 {
     public override ConsoleColor Color => ConsoleColor.Red;
 
-    public override char DisplayChar => 'Ó';
+    public override char DisplayChar => '★';
 
     public FoodInfo(Location location)
         : base(location)

@@ -1,0 +1,176 @@
+Snake reload
+------------
+- Látszódjanak a falak, jelenleg nem látszódik (beállítható pályamérettel)
+- Lehessen bezárni a kígyókat, ha nekimegy másik kígyónak vagy a falnak akkor ő is haljon meg
+- Nőhessen az ellenfél kígyója is
+- Legyenek "okosabbak" a kígyók (választható erősségszinttel
+	AI	Viselkedés
+	Random	össze-vissza
+	Easy	almára megy
+	Normal	kerülget
+	Hard	csapdáz
+	Expert	előre számol
+	Nightmare	együtt dolgozik a többi AI
+)
+- szintlépés beállításoknál beállítható pontonként.
+- Minden pályán más háttér generálódjon, a tó legyen hullámzó, a felülnézeti fák mozogjanak
+	Háttér animáció. Nem kell túlzásba vinni.
+	Elég: víz hullámzik, falevelek mozognak, felhők?, madarak?
+	Élőbbnek fog tűnni.
+	
+- lehesen elkapni a madarakat és új perk-et választani, mint a Golden Cookie-kat az idle játékokban. Időnként átrepül egy madár a pályán (konzolon pl. egy villogó V karakter). Ha a játékosnak sikerül elkapnia a fejével a mozgó madarat, azonnal felugrik a Perk-választó kártya, és kap egy extra képességet a szintlépésen kívül is. Ez óriási kockázat-jutalom döntést kényszerít a játékosra, hiszen a madár után kapkodva könnyen falnak rohanhat.
+	2-4 percenként átrepül villog csipog (beállítható hány percenként jelenjen meg 0 - Soha, etc)
+
+- A TitleArt is lehetne hullámzó színű, better titleart
+
+- Minden szintlépéskor jó lenne kapni valami perk-et
+
+	1. Támadó és Csapda Perkek (Az ellenfél kígyók ellen)
+	Mivel bevezetted, hogy a kígyók meghalnak, ha egymásnak vagy a falnak mennek, a harci perkek rendkívül szórakoztatóak lesznek.
+	„Tüskés Farok” (Spiky Tail):
+	Hatás: Ha egy ellenséges kígyó fejjel nekimegy a te farkadnak/testednek, nem te halsz meg, hanem ő sebződik/pusztul el. (Kiváló védekező fegyver, ha bekerítenek).
+
+	„Hátrahagyott Csapda” (Poison Trail):
+	Hatás: Időnként (vagy gombnyomásra) a kígyód hátrahagy egy mérgező/lassító felhőt a pályán. Ha az ellenséges kígyó belemegy, lelassul, így könnyebb sarokba szorítani.
+
+	„Ostorcsapás” (Tail Whip):
+	Hatás: Szintlépéskor vagy aktív képességként a kígyód farka tesz egy gyors söprő mozdulatot, ami hátralöki a közelben lévő ellenséges kígyókat (akik így falnak csapódhatnak).
+
+	"EMP"
+	Minden ellenfél 2 másodpercre elveszíti az AI-ját.
+
+	2. Mozgás és Túlélési Perkek
+	A megnövekedett sebesség és az okosabb ellenfelek miatt a precíz manőverezés életmentő lesz.
+
+	„Fantom Test” (Ghost Phase):
+	Hatás: Gombnyomásra (vagy 10 másodpercenként egyszer) a kígyód 1,5 másodpercre szellemképessé válik. Át tudsz menni a saját testeden, az ellenfeleken, vagy akár a fákon is anélkül, hogy meghalnál.
+
+	„Sürgősségi Fék” (Handbrake):
+	Hatás: Lehetővé teszi, hogy egy gomb nyomva tartásával 50%-kal lelassítsd a kígyódat a finom kanyarokhoz, miközben az ellenfelek teljes sebességgel rohannak a falnak.
+
+	„Páncélos Fej” (Iron Head):
+	Hatás: Túlélhetsz egyetlen falnak vagy másik kígyónak ütközést szintenként egyszer (a pajzs ilyenkor összetörik).
+
+	"Time Warp"
+	3 másodpercre minden más kígyó lelassul.
+
+	"Méregcsík"
+	Lassító csapdát hagysz magad után.
+
+	"Berserk"
+	Ha egyedül maradsz a pályán:
+	+40% sebesség
+
+	3. Pontgyűjtő és "Növekedés" Perkek
+	A célod az összes pont összegyűjtése a szintlépéshez. Ezek a perkek ezt gyorsítják fel, vagy fordítják a javadra.
+
+	"Lucky Food"
+Piros alma
++1
+
+Arany
++3
+
+Lila
+Perk
+
+Kék
+Pajzs
+
+Szivárvány
+Véletlen effekt
+
+	„Mágneses Vonzás” (Apple Magnet):
+	Hatás: A pontok (almák/tárgyak) kis távolságból maguktól a kígyód feje felé repülnek, így nem kell milliméter pontosan rájuk fordulnod.
+
+	„Diéta” (Metabolism):
+	Hatás: Minden felvett pont után feleannyit nő a kígyód hossza, mint normálisan (így kisebb eséllyel gabalyodsz magadba), de a pontot teljes értékűen jóváírja a szintlépéshez.
+
+	„Kettős Érték” (Double Harvest):
+	Hatás: 15% esélyed van arra, hogy egy pont felvételekor a játék azt dupla pontnak számolja el a szintlépés mérőjében.
+
+	4. Környezeti interakció (A hullámzó tóhoz és fákhoz)
+	Mivel a pályák dinamikusak (hullámzó víz, mozgó fák), ezt érdemes bevonni a játékmenetbe is!
+
+	„Kétéltű” (Amphibious):
+	Hatás: A tó hullámai nem sodorják el a kígyódat (vagy nem lassítják le), sőt, a vízben 20%-kal gyorsabban mozogsz, mint a szárazföldön.
+
+	„Fakérget Rágó” (Woodpecker):
+	Hatás: Át tudsz rágni a mozgó felülnézeti fák lombkoronáján (átgázolsz rajtuk), miközben az ellenfél kígyói kénytelenek megkerülni őket.
+
+	„Kaméleon” (Chameleon):
+	Hatás: Ha a fák lombjai alatt vagy a fűben tartózkodsz, az okos ellenséges kígyók "elveszítik a szaglásodat" és elindulnak az ellenkező irányba, így elkerülheted a hajszát.
+
+	Roguelike hatás. Amikor a játékos összegyűjti az összes pontot és szintet lép, ne csak véletlenszerűen kapja a képességet. SZINTLÉPÉSKOR válasszon egy (beállítások menüben lehessen változtatni hányat) fejlesztést.
+	A kiválasztó panelen legyen kiírva melyik billentyű aktiválja
+
+- A perket aktiváló betűk jelenlenek meg a státuszsorban.
+- Az ellenség kígyója is tudjon gyűjteni perk-eket, és mentsük is le az állapotukat, jó lenne mindnek nevet adni (fejlődő ellenségek!)
+
+	Kígyó neve,Színvilág,Egyedi AI / Viselkedési stílus,Kezdő / Kedvelt Perk
+	Viper,Neon Zöld,"Rendkívül agresszív, kifejezetten rád utazik, hogy elvágja az utadat.",Méregcsík (Poison Trail)
+	Ghost,Halvány Lila/Áttetsző,"Óvatos, kerüli a konfliktust, de imád átcsusszanni a réseken.",Fantom Test (Ghost Phase)
+	Titan,Mélykék / Sötétszürke,"Lassabb, de nagyon gyorsan nő és hatalmas területet zár le.",Páncélos Fej (Iron Head)
+	Fang,Vérvörös,"Az almákra hajt a leggyorsabb úton, de ha közel mész, odacsap.",Tüskés Farok (Spiky Tail)
+	Hydra,Sötétzöld,"Ha levágják a farkát (vagy ütközik), nem hal meg azonnal, csak lerövidül.",Diéta (Metabolism)
+
+	Mindegyik:
+	saját név
+	saját szín
+	saját statisztika
+	saját perkek
+	saját győzelmek
+	saját halálozások
+
+- Ranglista a játék végén
+- Beállítás, hogy milyen sebeséggel mehessenek a kígyók
+- A menüben lévő kígyó is mozoghatna :)
+- Legyen kiírva a Snake Reloaded? mint játék cím (legyen fancy)
+- beállítható ha valaki meghal veszítse-e el a perk-jeit, nullázódjon-e a hossz,
+- lehessen resetelni a game-et, mindenki perk nélkül indul
+- lehessen beállítani, hogy hány food-ot kelljen felvenni
+- MAUI appot csinálni belőle. Szeretném, ha Windows-on megmaradna a console-os feeling is, jöhet Windows konzolos kliens is, viszont tetszene, ha futna telón is.
+┌────────────────────────────────────────────────────────┐
+│             M.A.G.U.S.Assistant.Snake.Core             │
+│  (Játékmenet, AI, Kígyó osztályok, Perkek, Mentések)   │
+│ (Engine, Grid, Entities, AI, Perks, SaveState, Config) │
+└───────────────────────────┬────────────────────────────┘
+                            │ (Referencia)
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+┌─────────────────────────┐   ┌──────────────────────────┐
+│  Console Client (.NET)  │   │  .NET MAUI Client (App)  │
+│  (ASCII/ANSI grafika)   │   │                          │
+│ - System.Console        │   │ - GraphicsView (Canvas)  │
+│ - ANSI / Escape codes   │   │ - Swipe / Virtual D-Pad  │
+│ - Console.Beep()        │   │ - Bluetooth LAN Host     │
+└─────────────────────────┘   └──────────────────────────┘
+A Core projekt (Class Library): Itt él a teljes játéktér rácsszerkezete, az AI logikája (pl. A* útvonalkeresés a nehézségi szintekhez), a karakterstatisztikák és a perkek működése. Ez a projekt tiszta C#, nincs benne semmi platformspecifikus dolog.
+Konzolos kliens: Csak kirajzolja a Core állapotát karakterekből (■, ░, *), kezeli a billentyűzetet és a Console.Beep() hangokat.
+MAUI kliens: Egy GraphicsView segítségével, 2D-s effektekkel (canvas rajzolással) jeleníti meg ugyanazt a játékteret mobilon, érintőképernyős vagy swipe-os irányítással legyen választható. Swipe (legyintés) alapú legyen, vagy rakjunk ki virtuális D-Pad gombokat (nyilakat) a képernyő aljára?
+
+- Easter eggek (beállításoknál kikapcsolható legyen)
+ghost
+rainbow
+- Cheat kódok (beállításoknál kikapcsolható legyen)
+god -> Halhatatlanság (fantom mód végtelen ideig).
+grow -> Azonnali szintlépés.
+shrink -> A kígyó hossza visszaáll 3 egységre, de a pontok megmaradnak.
+perk -> perk választó
+spawnbird
+- keyboard kombók? (beállításoknál kikapcsolható legyen)
+- prt scr megnyomásakor mentse fájlba a pillnatnyi állapotot (látni is akarom akár json-ben is lehetne egy screenshot mező) ? + json
+- a leader boardon mindenkinek látszódnia kéne szerint (1.sor alapadatok, 2. sor perk-ek) össszes kígyó névvel, és rangsorban (ki a legjobb?)
+
+- Ha van bluetooth kapcsolat két mobil app közt tudjanak multiplayert játszani, akár többen is
+
+- bug report (elég megnyitni a default email küldő appot az exception detail-lel)
+- játék vége esetén (az utolsó 10 másodperc visszajátszása lassítva?)
+- kéne youtube videó a gameplayről, amit fel kéne tölteni (ha kell API key youtubehoz, mutasd meg mit kell tennem)
+
+- Challenge rendszer?
+Napi kihívás
+✓ Élj túl 5 percet
+✓ Ütköztess falnak 3 AI-t
+✓ Gyűjts össze 100 almát
+✓ Ne használj aktív perköt

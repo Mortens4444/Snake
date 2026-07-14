@@ -1,27 +1,53 @@
-﻿namespace SnakeGameEngine
+﻿using SnakeGameEngine.ConsoleUtils;
+
+namespace SnakeGameEngine
 {
     public static class GameMenu
     {
+        private const string Border = "════════════════════════════════";
+
+        private static readonly string Options = string.Join(Environment.NewLine,
+            "  New Game - Press Space",
+            "  Leaderboard - Press Enter",
+            "  Quit     - Press ESC");
+
+        private static readonly string AppleArt = EmbeddedResourceReader.Read("SnakeGameEngine.Resources.AppleArt.txt");
+
+        private static readonly string SnakeArt = EmbeddedResourceReader.Read("SnakeGameEngine.Resources.SnakeArt.txt");
+
+        private static readonly string MenuText = string.Join(Environment.NewLine, Border, Options, Border, AppleArt, SnakeArt);
+
         public static void Show()
         {
             Console.Clear();
             Console.SetCursorPosition(0, 0);
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("════════════════════════════════");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("  New Game - Press Space");
-            Console.WriteLine("  Leaderboard - Press Enter");
-            Console.WriteLine("  Quit     - Press ESC");
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("════════════════════════════════");
+            if (!VirtualTerminal.IsEnabled)
+            {
+                ShowWithoutAnimation();
+                return;
+            }
 
-            var apple = EmbeddedResourceReader.Read("SnakeGameEngine.Resources.AppleArt.txt");
-            var snake = EmbeddedResourceReader.Read("SnakeGameEngine.Resources.SnakeArt.txt");
+            while (!Console.KeyAvailable)
+            {
+                Console.SetCursorPosition(0, 0);
+                Console.Write(GradientWriter.BuildRainbow(MenuText, Environment.TickCount / 10));
+                Thread.Sleep(50);
+            }
+        }
+
+        private static void ShowWithoutAnimation()
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(Border);
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine(Options);
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(Border);
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(apple);
+            Console.WriteLine(AppleArt);
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(snake);
+            Console.WriteLine(SnakeArt);
         }
 
         public static ConsoleKeyInfo Choose()
