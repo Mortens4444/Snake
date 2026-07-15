@@ -19,4 +19,8 @@
     <EmbeddedResource Include="Resources\TitleArt.txt" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Snake.Core\SnakeGameEngine.Core.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SnakeGameEngine.Maui.MainPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#06140A">
+
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto">
+
+        <Label x:Name="StatusLabel"
+               Grid.Row="0"
+               Text="SNAKE RELOADED"
+               TextColor="#7CFC00"
+               FontAttributes="Bold"
+               FontSize="14"
+               Margin="12,10,12,0"
+               HorizontalOptions="Center" />
+
+        <CollectionView x:Name="PerkBar"
+                        Grid.Row="0"
+                        VerticalOptions="End"
+                        Margin="8,4"
+                        HeightRequest="40"
+                        ItemsLayout="HorizontalList"
+                        IsVisible="False">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Button Text="{Binding Label}"
+                            IsEnabled="{Binding IsReady}"
+                            Margin="3,0"
+                            Padding="10,4"
+                            FontSize="12"
+                            Clicked="OnPerkButtonClicked"
+                            CommandParameter="{Binding Name}" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <GraphicsView x:Name="GameView" Grid.Row="1" />
+
+        <Grid Grid.Row="2" Padding="0,6,0,14">
+            <Grid HorizontalOptions="Center"
+                  RowDefinitions="54,54,54"
+                  ColumnDefinitions="54,54,54"
+                  RowSpacing="6"
+                  ColumnSpacing="6">
+                <Button Grid.Row="0" Grid.Column="1" Text="▲" FontSize="20" Clicked="OnUpClicked" />
+                <Button Grid.Row="1" Grid.Column="0" Text="◄" FontSize="20" Clicked="OnLeftClicked" />
+                <Button Grid.Row="1" Grid.Column="2" Text="►" FontSize="20" Clicked="OnRightClicked" />
+                <Button Grid.Row="2" Grid.Column="1" Text="▼" FontSize="20" Clicked="OnDownClicked" />
+            </Grid>
+        </Grid>
+
+        <VerticalStackLayout x:Name="StartOverlay"
+                             Grid.Row="0"
+                             Grid.RowSpan="3"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="18">
+            <Label Text="SNAKE"
+                   FontSize="46"
+                   FontAttributes="Bold"
+                   TextColor="#7CFC00"
+                   HorizontalOptions="Center" />
+            <Label Text="R E L O A D E D"
+                   FontSize="20"
+                   TextColor="#FFD447"
+                   HorizontalOptions="Center" />
+            <Button Text="New Game"
+                    FontSize="20"
+                    Padding="24,10"
+                    Clicked="OnNewGameClicked"
+                    HorizontalOptions="Center" />
+            <Button Text="Settings"
+                    FontSize="16"
+                    Padding="20,8"
+                    Clicked="OnSettingsClicked"
+                    HorizontalOptions="Center" />
+            <Label Text="Swipe or use the D-pad to steer"
+                   TextColor="#9AD79A"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <Grid x:Name="SettingsOverlay"
+              Grid.Row="0"
+              Grid.RowSpan="3"
+              BackgroundColor="#06140A"
+              IsVisible="False">
+            <ScrollView>
+                <VerticalStackLayout Padding="24" Spacing="16" HorizontalOptions="Center" WidthRequest="320">
+                    <Label Text="SETTINGS" FontSize="26" FontAttributes="Bold" TextColor="#7CFC00" HorizontalOptions="Center" />
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Sound / haptic feedback" TextColor="White" VerticalOptions="Center" />
+                        <Switch x:Name="SoundSwitch" Grid.Column="1" Toggled="OnSoundToggled" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Lose perks on death" TextColor="White" VerticalOptions="Center" />
+                        <Switch x:Name="LosePerksSwitch" Grid.Column="1" Toggled="OnLosePerksToggled" />
+                    </Grid>
+
+                    <Label x:Name="DifficultyLabel" Text="Enemy difficulty: Normal" TextColor="White" />
+                    <Slider x:Name="DifficultySlider" Minimum="0" Maximum="5" ValueChanged="OnDifficultyChanged" />
+
+                    <Label x:Name="TargetLengthLabel" Text="Target snake length: 50" TextColor="White" />
+                    <Slider x:Name="TargetLengthSlider" Minimum="10" Maximum="150" ValueChanged="OnTargetLengthChanged" />
+
+                    <Label x:Name="BirdLabel" Text="Bird every 3 minutes" TextColor="White" />
+                    <Slider x:Name="BirdSlider" Minimum="0" Maximum="15" ValueChanged="OnBirdIntervalChanged" />
+
+                    <Button Text="Reset progress (perks + enemy profiles)" Clicked="OnResetProgressClicked" />
+
+                    <Button Text="Back" Clicked="OnCloseSettingsClicked" HorizontalOptions="Center" Margin="0,12,0,0" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+    </Grid>
+</ContentPage>
