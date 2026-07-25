@@ -31,6 +31,15 @@ public static class SnapshotBuilder
             .Select(location => new PointDto(location.X, location.Y))
             .ToList();
 
+        var guestPerkChoices = gameState.GuestChoosingPerk
+            ? gameState.GuestPerkChoiceOptions
+                .Select(perk => new PerkOptionDto(
+                    perk.Name,
+                    perk.Description,
+                    perk.ActivationKey == null ? "passive" : $"activate with {perk.ActivationKey}"))
+                .ToList()
+            : null;
+
         return new SnapshotMessage(
             frame,
             vacated,
@@ -39,6 +48,8 @@ public static class SnapshotBuilder
             gameState.Status == GameStatus.Won,
             gameState.WinnerName,
             gameState.GuestAlive,
-            endMessage);
+            endMessage,
+            guestPerkChoices,
+            gameState.GuestLevel);
     }
 }

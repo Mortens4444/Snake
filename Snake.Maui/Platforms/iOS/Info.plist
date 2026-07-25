@@ -28,5 +28,10 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<!-- Bluetooth LAN co-op: scanning as a guest and advertising as a host. -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Snake Reloaded uses Bluetooth to host or join a local co-op game with a nearby player.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Snake Reloaded uses Bluetooth to host or join a local co-op game with a nearby player.</string>
 </dict>
 </plist>

@@ -29,9 +29,10 @@ public static class PerkFactory
         return CreateAll().FirstOrDefault(perk => perk.Name == name);
     }
 
-    public static List<Perk> GetRandomChoices(List<Perk> ownedPerks, int count)
+    public static List<Perk> GetRandomChoices(List<Perk> ownedPerks, int count, bool forGuest = false)
     {
         return CreateAll()
+            .Where(perk => !forGuest || perk.IsEligibleForGuest)
             .Where(perk => ownedPerks.All(ownedPerk => ownedPerk.Name != perk.Name))
             .OrderBy(_ => Random.Shared.Next())
             .Take(count)

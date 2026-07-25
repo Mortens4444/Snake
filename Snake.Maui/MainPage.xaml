@@ -71,6 +71,16 @@
                     Padding="24,10"
                     Clicked="OnNewGameClicked"
                     HorizontalOptions="Center" />
+            <Button Text="Host (Bluetooth)"
+                    FontSize="16"
+                    Padding="20,8"
+                    Clicked="OnHostBluetoothClicked"
+                    HorizontalOptions="Center" />
+            <Button Text="Join (Bluetooth)"
+                    FontSize="16"
+                    Padding="20,8"
+                    Clicked="OnJoinBluetoothClicked"
+                    HorizontalOptions="Center" />
             <Button Text="Settings"
                     FontSize="16"
                     Padding="20,8"
@@ -79,6 +89,47 @@
             <Label Text="Swipe or use the D-pad to steer"
                    TextColor="#9AD79A"
                    HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout x:Name="BluetoothWaitOverlay"
+                             Grid.Row="0"
+                             Grid.RowSpan="3"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="18"
+                             IsVisible="False">
+            <Label Text="Waiting for a player to join..."
+                   FontSize="18"
+                   TextColor="#7CFC00"
+                   HorizontalOptions="Center" />
+            <ActivityIndicator IsRunning="True" Color="#7CFC00" />
+            <Button Text="Cancel" Clicked="OnCancelBluetoothWaitClicked" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout x:Name="BluetoothScanOverlay"
+                             Grid.Row="0"
+                             Grid.RowSpan="3"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Spacing="14"
+                             WidthRequest="280"
+                             IsVisible="False">
+            <Label Text="Nearby games"
+                   FontSize="18"
+                   TextColor="#7CFC00"
+                   HorizontalOptions="Center" />
+            <ActivityIndicator IsRunning="True" Color="#7CFC00" />
+            <CollectionView x:Name="ScanResultsView" HeightRequest="220" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Button Text="{Binding Name}"
+                                Margin="0,3"
+                                Clicked="OnScanResultClicked"
+                                CommandParameter="{Binding}" />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Cancel" Clicked="OnCancelBluetoothScanClicked" HorizontalOptions="Center" />
         </VerticalStackLayout>
 
         <Grid x:Name="SettingsOverlay"
@@ -98,6 +149,11 @@
                     <Grid ColumnDefinitions="*,Auto">
                         <Label Text="Lose perks on death" TextColor="White" VerticalOptions="Center" />
                         <Switch x:Name="LosePerksSwitch" Grid.Column="1" Toggled="OnLosePerksToggled" />
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Lose snake length on death" TextColor="White" VerticalOptions="Center" />
+                        <Switch x:Name="LoseLengthSwitch" Grid.Column="1" Toggled="OnLoseLengthToggled" />
                     </Grid>
 
                     <Label x:Name="DifficultyLabel" Text="Enemy difficulty: Normal" TextColor="White" />

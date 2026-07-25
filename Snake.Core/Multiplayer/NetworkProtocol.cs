@@ -7,7 +7,8 @@ public enum MessageType : byte
 {
     Hello = 1,
     Input = 2,
-    Snapshot = 3
+    Snapshot = 3,
+    PerkPick = 4
 }
 
 // Length-prefixed framing over a NetworkStream: [1 byte type][4 byte big-endian length][UTF8 JSON payload].

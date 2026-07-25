@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Shiny;
 
 namespace SnakeGameEngine.Maui;
 
@@ -25,6 +26,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseShiny()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

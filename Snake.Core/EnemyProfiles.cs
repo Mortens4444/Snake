@@ -10,6 +10,10 @@ public class EnemyProfile
 
     public int Survivals { get; set; }
 
+    // Survived a round the player did NOT - narrower than Survivals, which also counts rounds
+    // where the player won or several enemies all survived together.
+    public int Wins { get; set; }
+
     public int PlayerKills { get; set; }
 
     public List<string> PerkNames { get; set; } = new();
@@ -48,10 +52,15 @@ public static class EnemyProfileStore
             profile.Deaths++;
             profile.PerkNames.Clear();
         }
+        var playerLost = gameState.Status == GameStatus.GameOver;
         foreach (var enemySnake in gameState.EnemySnakes)
         {
             var profile = GetOrAdd(profiles, enemySnake.Personality.Name);
             profile.Survivals++;
+            if (playerLost)
+            {
+                profile.Wins++;
+            }
             profile.PerkNames = enemySnake.EnemyPerks.ToList();
         }
         if (gameState.PlayerKilledBy != null)

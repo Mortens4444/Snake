@@ -12,6 +12,13 @@ public class GhostPhasePerk : Perk
 
     protected override void OnActivate(GameState gameState)
     {
-        gameState.GhostTicksRemaining = 15;
+        if (IsGuestOwned)
+        {
+            gameState.GuestGhostTicksRemaining = 15;
+        }
+        else
+        {
+            gameState.GhostTicksRemaining = 15;
+        }
     }
 }

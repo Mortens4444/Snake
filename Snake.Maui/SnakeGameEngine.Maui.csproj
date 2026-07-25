@@ -31,7 +31,7 @@
 		<ApplicationTitle>Snake Reloaded</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.mortens.snakereloaded</ApplicationId>
+		<ApplicationId>com.mortens.snake.reloaded</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -42,7 +42,9 @@
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<!-- Raised from 21 to 23: Shiny's Bluetooth LE hosting pulls in a newer androidx.lifecycle
+		     transitive dependency that itself requires minSdk 23 (Android 6.0). -->
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">23.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
@@ -68,6 +70,9 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="Shiny.BluetoothLE" Version="5.2.5" />
+		<PackageReference Include="Shiny.BluetoothLE.Hosting" Version="5.2.5" />
+		<PackageReference Include="Shiny.Hosting.Maui" Version="5.2.5" />
 	</ItemGroup>
 
 	<ItemGroup>

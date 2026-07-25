@@ -1,5 +1,6 @@
 using SnakeGameEngine.ConsoleUtils;
 using SnakeGameEngine.Multiplayer;
+using SnakeGameEngine.Perks;
 
 namespace SnakeGameEngine;
 
@@ -75,18 +76,42 @@ public static class MultiplayerEngine
         while (gameState.Status == GameStatus.Running && !lanHost.Disconnected)
         {
             var action = InputReader.ReadAction(out var pressedKey);
-            if (action == GameAction.Quit)
+
+            // While a card is up, digits/ESC pick a perk instead of their usual meaning (ESC
+            // would otherwise unconditionally quit) - this check must run before the Quit check.
+            if (gameState.HostChoosingPerk)
+            {
+                if (pressedKey == ConsoleKey.Escape)
+                {
+                    ResolveHostPerkChoice(gameState, renderer, -1);
+                }
+                else if (pressedKey is >= ConsoleKey.D1 and <= ConsoleKey.D9)
+                {
+                    ResolveHostPerkChoice(gameState, renderer, pressedKey - ConsoleKey.D1);
+                }
+            }
+            else if (action == GameAction.Quit)
             {
                 break;
             }
-            if (action == GameAction.Pause)
+            else if (action == GameAction.Pause)
             {
                 // Pausing a shared session would also freeze the guest's stream; kept out of scope for now.
                 continue;
             }
 
+            var guestPerkPick = lanHost.ConsumePendingGuestPerkPick();
+            if (gameState.GuestChoosingPerk && guestPerkPick.HasValue)
+            {
+                ResolveGuestPerkChoice(gameState, guestPerkPick.Value);
+            }
+
             gameState.PendingGuestAction = lanHost.LatestGuestAction;
+            gameState.PendingGuestKey = lanHost.ConsumePendingGuestKey();
             gameState.Tick(action, pressedKey);
+
+            ArmHostPerkChoice(gameState);
+            ArmGuestPerkChoice(gameState);
 
             foreach (var soundEvent in gameState.SoundEvents)
             {
@@ -95,13 +120,29 @@ public static class MultiplayerEngine
             gameState.SoundEvents.Clear();
 
             renderer.DrawFrame(gameState);
+            if (gameState.HostChoosingPerk)
+            {
+                // Constants.FieldOffsetX/Y leave no dead margin, so DrawFrame repaints over the
+                // card within a tick or two - it must be redrawn every iteration, not just once.
+                ConsoleDrawer.DrawPerkCard(gameState.PerkChoiceOptions, gameState.Level);
+            }
+
             lanHost.SendSnapshotAsync(gameState, BuildHostStatusText(gameState)).GetAwaiter().GetResult();
 
-            // Roguelike perk cards are a host-only concept in this first multiplayer cut;
-            // the level-up still happens, it just never pauses for a choice mid-session.
-            gameState.PendingPerkChoice = false;
-
             Thread.Sleep(gameState.GetTickMilliseconds());
+        }
+
+        if (gameState.Status == GameStatus.GameOver && Settings.Current.LosePerksOnDeath)
+        {
+            PlayerProgress.Reset();
+        }
+        if (gameState.Status is GameStatus.GameOver or GameStatus.Won)
+        {
+            var progress = PlayerProgress.Load();
+            progress.StartingLength = gameState.Status == GameStatus.GameOver && Settings.Current.LoseLengthOnDeath
+                ? 2
+                : gameState.PlayerSnake.SnakeBodyParts.Count;
+            progress.Save();
         }
 
         var endMessage = BuildEndMessage(gameState);
@@ -132,12 +173,22 @@ public static class MultiplayerEngine
             return;
         }
 
+        // The host screen prints "IP:PORT" (ready to paste), but only the IP should be used to
+        // connect - the port is always this app's fixed Port constant. Without stripping it, a
+        // pasted "IP:PORT" gets treated as one bad hostname and fails DNS resolution.
+        var hostAddress = address.Trim();
+        var colonIndex = hostAddress.LastIndexOf(':');
+        if (colonIndex > 0)
+        {
+            hostAddress = hostAddress[..colonIndex];
+        }
+
         Console.WriteLine("Connecting...");
         using var lanClient = new LanClient();
         HelloMessage hello;
         try
         {
-            hello = lanClient.ConnectAsync(address.Trim(), Port, CancellationToken.None).GetAwaiter().GetResult();
+            hello = lanClient.ConnectAsync(hostAddress, Port, CancellationToken.None).GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {
@@ -151,17 +202,42 @@ public static class MultiplayerEngine
         renderer.DrawInitial();
 
         var lastAction = GameAction.None;
+        SnapshotMessage? lastSnapshot = null;
         while (!lanClient.Disconnected)
         {
-            var action = InputReader.ReadAction(out _);
-            if (action == GameAction.Quit)
+            var action = InputReader.ReadAction(out var pressedKey);
+
+            // Judged from the previous tick's snapshot, since this tick's hasn't arrived yet -
+            // the card-up check must run before the Quit check, since ESC otherwise always quits.
+            var cardIsUp = lastSnapshot?.GuestPerkChoices != null;
+            if (cardIsUp)
             {
-                break;
+                if (pressedKey == ConsoleKey.Escape)
+                {
+                    lanClient.SendPerkPickAsync(-1).GetAwaiter().GetResult();
+                }
+                else if (pressedKey is >= ConsoleKey.D1 and <= ConsoleKey.D9)
+                {
+                    lanClient.SendPerkPickAsync(pressedKey - ConsoleKey.D1).GetAwaiter().GetResult();
+                }
             }
-            if (action != GameAction.None && action != lastAction)
+            else
             {
-                lastAction = action;
-                lanClient.SendInputAsync(action).GetAwaiter().GetResult();
+                if (action == GameAction.Quit)
+                {
+                    break;
+                }
+                // Perk activation letters and digits all map to GameAction.None, so the send must
+                // also fire on any raw keypress, not just a changed steering action - otherwise
+                // those keystrokes would be silently swallowed and never reach the host.
+                if ((action != GameAction.None && action != lastAction) || pressedKey != default)
+                {
+                    if (action != GameAction.None)
+                    {
+                        lastAction = action;
+                    }
+                    lanClient.SendInputAsync(action, pressedKey).GetAwaiter().GetResult();
+                }
             }
 
             var snapshot = lanClient.WaitForNextSnapshotAsync(CancellationToken.None).GetAwaiter().GetResult();
@@ -169,7 +245,20 @@ public static class MultiplayerEngine
             {
                 break;
             }
+
+            if (cardIsUp && snapshot.GuestPerkChoices == null)
+            {
+                // The card was drawn straight over live board cells; Frame is a full redraw of
+                // every live entity each tick, so a full repaint here is safe - DrawSnapshot right
+                // after restores every entity, it just also needs the static background back first.
+                renderer.DrawInitial();
+            }
             renderer.DrawSnapshot(snapshot);
+            if (snapshot.GuestPerkChoices != null)
+            {
+                MultiplayerGuestRenderer.DrawPerkCard(snapshot.GuestPerkChoices, snapshot.GuestLevel);
+            }
+            lastSnapshot = snapshot;
 
             if (!snapshot.IsRunning)
             {
@@ -190,6 +279,60 @@ public static class MultiplayerEngine
         }
     }
 
+    // Arms the freeze right where the old code discarded PendingPerkChoice: computes the offered
+    // cards once (not re-rolled every frame while the non-blocking card is up).
+    private static void ArmHostPerkChoice(GameState gameState)
+    {
+        if (gameState.Status == GameStatus.Running && gameState.PendingPerkChoice && !gameState.HostChoosingPerk)
+        {
+            gameState.PendingPerkChoice = false;
+            gameState.HostChoosingPerk = true;
+            gameState.PerkChoiceOptions = PerkFactory.GetRandomChoices(gameState.PlayerPerks, Settings.Current.PerkChoicesPerLevel);
+        }
+    }
+
+    private static void ArmGuestPerkChoice(GameState gameState)
+    {
+        if (gameState.Status == GameStatus.Running && gameState.GuestPendingPerkChoice && !gameState.GuestChoosingPerk)
+        {
+            gameState.GuestPendingPerkChoice = false;
+            gameState.GuestChoosingPerk = true;
+            gameState.GuestPerkChoiceOptions = PerkFactory.GetRandomChoices(gameState.GuestPerks, Settings.Current.PerkChoicesPerLevel, forGuest: true);
+        }
+    }
+
+    private static void ResolveHostPerkChoice(GameState gameState, IRenderer renderer, int choiceIndex)
+    {
+        if (choiceIndex >= 0 && choiceIndex < gameState.PerkChoiceOptions.Count)
+        {
+            gameState.PlayerPerks.Add(gameState.PerkChoiceOptions[choiceIndex]);
+            // Load-modify-save, not a fresh PlayerProgress: replacing it outright would silently
+            // wipe the persisted StartingLength (see SaveStartingLength below).
+            var progress = PlayerProgress.Load();
+            progress.PerkNames = gameState.PlayerPerks.Select(perk => perk.Name).ToList();
+            progress.Save();
+            Sounds.Play(SoundEvent.PerkGained);
+        }
+        gameState.PerkChoiceOptions = new List<Perk>();
+        gameState.HostChoosingPerk = false;
+        // Wipes the card overlay - the field/border/background all need a full repaint since the
+        // card was drawn straight over live board cells (same pattern ShowPerkSelection uses).
+        renderer.BeginGame(gameState);
+    }
+
+    private static void ResolveGuestPerkChoice(GameState gameState, int choiceIndex)
+    {
+        if (choiceIndex >= 0 && choiceIndex < gameState.GuestPerkChoiceOptions.Count)
+        {
+            var perk = gameState.GuestPerkChoiceOptions[choiceIndex];
+            perk.IsGuestOwned = true;
+            gameState.GuestPerks.Add(perk);
+            Sounds.Play(SoundEvent.PerkGained);
+        }
+        gameState.GuestPerkChoiceOptions = new List<Perk>();
+        gameState.GuestChoosingPerk = false;
+    }
+
     private static string BuildHostStatusText(GameState gameState)
     {
         var guestStatus = gameState.GuestSnake == null
@@ -197,8 +340,11 @@ public static class MultiplayerEngine
             : gameState.GuestAlive
                 ? $"  Guest: {gameState.GuestSnake.SnakeBodyParts.Count}"
                 : "  Guest: out";
+        // Lets the guest's screen know why the host snake stopped moving - the guest already
+        // knows about its own card since it's drawn directly on the guest's own screen.
+        var hostPerkStatus = gameState.HostChoosingPerk ? "  Host is choosing a perk..." : "";
         return $"Length: {gameState.PlayerSnake.SnakeBodyParts.Count}/{Settings.Current.TargetSnakeLength}{guestStatus}"
-            + $"  Enemies: {gameState.EnemySnakes.Count}  Time: {gameState.Elapsed:mm\\:ss}  ESC-Quit";
+            + $"  Enemies: {gameState.EnemySnakes.Count}  Time: {gameState.Elapsed:mm\\:ss}  ESC-Quit{hostPerkStatus}";
     }
 
     private static string BuildEndMessage(GameState gameState)

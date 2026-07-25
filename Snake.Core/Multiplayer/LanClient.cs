@@ -36,7 +36,7 @@ public sealed class LanClient : IDisposable
         return hello;
     }
 
-    public async Task SendInputAsync(GameAction action)
+    public async Task SendInputAsync(GameAction action, ConsoleKey key = default)
     {
         if (stream == null || Disconnected)
         {
@@ -44,7 +44,28 @@ public sealed class LanClient : IDisposable
         }
         try
         {
-            await NetworkProtocol.WriteMessageAsync(stream, MessageType.Input, new InputMessage(action)).ConfigureAwait(false);
+            await NetworkProtocol.WriteMessageAsync(stream, MessageType.Input, new InputMessage(action, key)).ConfigureAwait(false);
+        }
+        catch (IOException)
+        {
+            Disconnected = true;
+        }
+        catch (SocketException)
+        {
+            Disconnected = true;
+        }
+    }
+
+    // Sent while the guest's own perk-choice card is up: choiceIndex is 0-based, or -1 to skip.
+    public async Task SendPerkPickAsync(int choiceIndex)
+    {
+        if (stream == null || Disconnected)
+        {
+            return;
+        }
+        try
+        {
+            await NetworkProtocol.WriteMessageAsync(stream, MessageType.PerkPick, new PerkPickMessage(choiceIndex)).ConfigureAwait(false);
         }
         catch (IOException)
         {

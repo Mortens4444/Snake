@@ -16,7 +16,7 @@ public class PoisonTrailPerk : Perk
 
     protected override void OnActivate(GameState gameState)
     {
-        var tail = gameState.PlayerSnake.Tail;
+        var tail = IsGuestOwned ? gameState.GuestSnake!.Tail : gameState.PlayerSnake.Tail;
         foreach (var (offsetX, offsetY) in CloudOffsets)
         {
             var location = new Location(tail.X + offsetX, tail.Y + offsetY);

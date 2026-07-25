@@ -19,4 +19,8 @@ public class HandbrakePerk : Perk
     {
         return gameState.SlowdownTicksRemaining > 0 ? milliseconds * 2 : milliseconds;
     }
+
+    // GameState.GetTickMilliseconds() only ever reads the host's PlayerPerks; the guest moves on
+    // the same shared tick as the host, so a guest-owned speed perk would have zero effect.
+    public override bool IsEligibleForGuest => false;
 }

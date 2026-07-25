@@ -16,6 +16,14 @@ public sealed class LanHost : IDisposable
 
     public volatile GameAction LatestGuestAction = GameAction.None;
 
+    // One-shot events (a relayed key press, a perk-pick choice), not sticky state like
+    // LatestGuestAction - so they're guarded by a lock and consumed exactly once, mirroring
+    // LanClient's snapshotLock/latestSnapshot pattern. Nullable<T> can't be volatile, and a sticky
+    // field would be the wrong shape for an event anyway.
+    private readonly object inputEventLock = new();
+    private ConsoleKey pendingGuestKey;
+    private int? pendingGuestPerkPick;
+
     public bool IsConnected { get; private set; }
 
     public bool Disconnected { get; private set; }
@@ -89,7 +97,23 @@ public sealed class LanHost : IDisposable
                 var (type, payload) = await NetworkProtocol.ReadRawMessageAsync(stream, cancellationToken).ConfigureAwait(false);
                 if (type == MessageType.Input)
                 {
-                    LatestGuestAction = NetworkProtocol.Decode<InputMessage>(payload).Action;
+                    var input = NetworkProtocol.Decode<InputMessage>(payload);
+                    LatestGuestAction = input.Action;
+                    if (input.Key != default)
+                    {
+                        lock (inputEventLock)
+                        {
+                            pendingGuestKey = input.Key;
+                        }
+                    }
+                }
+                else if (type == MessageType.PerkPick)
+                {
+                    var pick = NetworkProtocol.Decode<PerkPickMessage>(payload);
+                    lock (inputEventLock)
+                    {
+                        pendingGuestPerkPick = pick.ChoiceIndex;
+                    }
                 }
             }
         }
@@ -103,6 +127,28 @@ public sealed class LanHost : IDisposable
         catch (SocketException)
         {
             Disconnected = true;
+        }
+    }
+
+    // Consume-once: returns the key relayed since the last call, then clears it (default = none).
+    public ConsoleKey ConsumePendingGuestKey()
+    {
+        lock (inputEventLock)
+        {
+            var key = pendingGuestKey;
+            pendingGuestKey = default;
+            return key;
+        }
+    }
+
+    // Consume-once: returns the guest's perk pick since the last call, then clears it (null = none).
+    public int? ConsumePendingGuestPerkPick()
+    {
+        lock (inputEventLock)
+        {
+            var pick = pendingGuestPerkPick;
+            pendingGuestPerkPick = null;
+            return pick;
         }
     }
 

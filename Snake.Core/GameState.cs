@@ -16,7 +16,7 @@ public class GameState
     private readonly Stopwatch stopwatch = new();
     private int enemyMoveRound;
 
-    public Snake PlayerSnake { get; } = new();
+    public Snake PlayerSnake { get; }
 
     // Second, network-controlled snake for LAN co-op. Null in single-player.
     public Snake? GuestSnake { get; private set; }
@@ -29,6 +29,10 @@ public class GameState
 
     // Set by the host's network layer before each Tick(); consumed once, then reset.
     public GameAction PendingGuestAction { get; set; }
+
+    // Same pattern as PendingGuestAction, but for the raw key - lets the guest's perk
+    // activation letters (G/E/T/O/W/B) and perk-choice digits reach its own perk hooks.
+    public ConsoleKey PendingGuestKey { get; set; }
 
     public List<ObstacleSnake> EnemySnakes { get; }
 
@@ -57,12 +61,42 @@ public class GameState
 
     public int LevelPoints { get; private set; }
 
+    public int GuestLevel { get; private set; } = 1;
+
+    public int GuestLevelPoints { get; private set; }
+
+    // One-shot edge-triggers: a choice-worthy event just happened, not yet consumed.
+    // Single-player consumes these directly; multiplayer (MultiplayerEngine) arms the
+    // persistent *ChoosingPerk flags below instead - see GameState.Tick() for the freeze gating.
     public bool PendingPerkChoice { get; set; }
+
+    public bool GuestPendingPerkChoice { get; set; }
+
+    // Multiplayer-only, non-blocking perk-choice state. Never written by GameState itself -
+    // MultiplayerEngine arms/clears these so the choosing snake's own tick-slice can freeze
+    // (see Tick()) without pausing the world the way single-player's ShowPerkSelection does.
+    public bool HostChoosingPerk { get; set; }
+
+    public bool GuestChoosingPerk { get; set; }
+
+    public List<Perk> PerkChoiceOptions { get; set; } = new();
+
+    public List<Perk> GuestPerkChoiceOptions { get; set; } = new();
+
+    // Purely cosmetic, permanent-until-retoggled snake skins (see CheckEasterEggs) - unlike the
+    // "god" cheat or the real Ghost Phase perk/Rainbow food, these grant no gameplay advantage.
+    public bool GhostSkinActive { get; set; }
+
+    public bool RainbowSkinActive { get; set; }
 
     public List<Perk> PlayerPerks { get; } = new();
 
+    public List<Perk> GuestPerks { get; } = new();
+
     // Timed effects driven by perks
     public int GhostTicksRemaining { get; set; }
+
+    public int GuestGhostTicksRemaining { get; set; }
 
     public int EmpTicksRemaining { get; set; }
 
@@ -71,6 +105,8 @@ public class GameState
     public int SlowdownTicksRemaining { get; set; }
 
     public int ShieldCharges { get; set; }
+
+    public int GuestShieldCharges { get; set; }
 
     public List<PoisonCloud> PoisonClouds { get; } = new();
 
@@ -86,6 +122,7 @@ public class GameState
     private int birdStepX;
     private int nextBirdSpawnTick = -1;
     private string typedLetters = "";
+    private string typedEasterEggLetters = "";
 
     public TimeSpan Elapsed => stopwatch.Elapsed;
 
@@ -93,12 +130,16 @@ public class GameState
 
     public GameState()
     {
+        var progress = PlayerProgress.Load();
+        var playerSpawn = new Location(Settings.Current.MapWidth / 2, Settings.Current.MapHeight / 2);
+        PlayerSnake = new Snake(playerSpawn, progress.StartingLength);
+
         Background = Background.Generate();
         EnemySnakes = ObstacleProducer.GetObstacles(Background);
         EnemyCells = EnemySnakes.SelectMany(enemySnake => enemySnake.Cells).ToList();
         Foods.Add(FoodProducer.GetFood(PlayerSnake, EnemyCells, Foods, Background));
 
-        foreach (var perkName in PlayerProgress.Load().PerkNames)
+        foreach (var perkName in progress.PerkNames)
         {
             var perk = PerkFactory.CreateByName(perkName);
             if (perk != null)
@@ -136,17 +177,28 @@ public class GameState
     {
         VacatedLocations.Clear();
         TickTimedEffects(pressedKey);
+        PendingGuestKey = default;
         CheckCheatCodes(pressedKey);
+        CheckEasterEggs(pressedKey);
 
-        PlayerSnake.SetDirection(action);
-        if (GuestSnake != null && GuestAlive)
+        // A snake that's currently choosing a perk (multiplayer only - see HostChoosingPerk/
+        // GuestChoosingPerk) has its whole per-tick slice frozen: it doesn't turn, eat, move or
+        // collide. Everything else - the other snake, enemies, food, the bird - keeps going.
+        if (!HostChoosingPerk)
+        {
+            PlayerSnake.SetDirection(action);
+        }
+        if (GuestSnake != null && GuestAlive && !GuestChoosingPerk)
         {
             GuestSnake.SetDirection(PendingGuestAction);
         }
         PendingGuestAction = GameAction.None;
 
-        HandleEating();
-        if (GuestSnake != null && GuestAlive)
+        if (!HostChoosingPerk)
+        {
+            HandleEating();
+        }
+        if (GuestSnake != null && GuestAlive && !GuestChoosingPerk)
         {
             HandleGuestEating();
         }
@@ -155,27 +207,31 @@ public class GameState
             return;
         }
 
-        var previousTail = PlayerSnake.Tail;
-        VacatedLocations.Add(previousTail);
-        PlayerSnake.Move();
+        Location? previousTail = null;
+        if (!HostChoosingPerk)
+        {
+            previousTail = PlayerSnake.Tail;
+            VacatedLocations.Add(previousTail);
+            PlayerSnake.Move();
+        }
 
         Location? guestPreviousTail = null;
-        if (GuestSnake != null && GuestAlive)
+        if (GuestSnake != null && GuestAlive && !GuestChoosingPerk)
         {
             guestPreviousTail = GuestSnake.Tail;
             VacatedLocations.Add(guestPreviousTail);
             GuestSnake.Move();
         }
 
-        if (!TrySurviveCollisions(previousTail))
+        if (previousTail != null && !TrySurviveCollisions(previousTail))
         {
             RecordReplayFrame();
             return;
         }
 
-        if (GuestSnake != null && GuestAlive && guestPreviousTail != null)
+        if (GuestSnake != null && GuestAlive && !GuestChoosingPerk && guestPreviousTail != null)
         {
-            TryResolveGuestCollisions();
+            TryResolveGuestCollisions(guestPreviousTail);
         }
 
         TickNumber++;
@@ -239,12 +295,12 @@ public class GameState
     }
 
     // Tail Whip: nearby enemies recoil, losing their front cells; short ones die outright.
-    public void TailWhip()
+    public void TailWhip(Snake actingSnake)
     {
         foreach (var enemySnake in EnemySnakes.ToList())
         {
             var head = enemySnake.Cells[0].Location;
-            var distance = Math.Abs(head.X - PlayerSnake.Head.X) + Math.Abs(head.Y - PlayerSnake.Head.Y);
+            var distance = Math.Abs(head.X - actingSnake.Head.X) + Math.Abs(head.Y - actingSnake.Head.Y);
             if (distance > 5)
             {
                 continue;
@@ -268,10 +324,8 @@ public class GameState
 
     private void TickTimedEffects(ConsoleKey pressedKey)
     {
-        if (GhostTicksRemaining > 0)
-        {
-            GhostTicksRemaining--;
-        }
+        // Shared/global: these act on the enemy population or the world itself, so they run
+        // unconditionally no matter who (if anyone) is currently frozen choosing a perk.
         if (EmpTicksRemaining > 0)
         {
             EmpTicksRemaining--;
@@ -280,11 +334,6 @@ public class GameState
         {
             TimeWarpTicksRemaining--;
         }
-        if (SlowdownTicksRemaining > 0)
-        {
-            SlowdownTicksRemaining--;
-        }
-
         PoisonClouds.RemoveAll(cloud =>
         {
             if (cloud.ExpiresAtTick <= TickNumber)
@@ -295,17 +344,48 @@ public class GameState
             return false;
         });
 
-        foreach (var perk in PlayerPerks)
+        if (!HostChoosingPerk)
         {
-            if (perk.CooldownRemaining > 0)
+            if (GhostTicksRemaining > 0)
             {
-                perk.CooldownRemaining--;
+                GhostTicksRemaining--;
             }
-            if (pressedKey != default && perk.ActivationKey == pressedKey)
+            if (SlowdownTicksRemaining > 0)
             {
-                perk.TryActivate(this);
+                SlowdownTicksRemaining--;
             }
-            perk.OnTick(this);
+            foreach (var perk in PlayerPerks)
+            {
+                if (perk.CooldownRemaining > 0)
+                {
+                    perk.CooldownRemaining--;
+                }
+                if (pressedKey != default && perk.ActivationKey == pressedKey)
+                {
+                    perk.TryActivate(this);
+                }
+                perk.OnTick(this);
+            }
+        }
+
+        if (GuestSnake != null && GuestAlive && !GuestChoosingPerk)
+        {
+            if (GuestGhostTicksRemaining > 0)
+            {
+                GuestGhostTicksRemaining--;
+            }
+            foreach (var perk in GuestPerks)
+            {
+                if (perk.CooldownRemaining > 0)
+                {
+                    perk.CooldownRemaining--;
+                }
+                if (PendingGuestKey != default && perk.ActivationKey == PendingGuestKey)
+                {
+                    perk.TryActivate(this);
+                }
+                perk.OnTick(this);
+            }
         }
     }
 
@@ -369,8 +449,7 @@ public class GameState
         }
     }
 
-    // A deliberately simpler ruleset for the guest snake in LAN co-op: it grows and scores,
-    // but does not touch the host's perk/shield/level state (those are host-only concepts).
+    // Mirrors HandleEating(): the guest gets full perk/shield/level parity with the host.
     private void HandleGuestEating()
     {
         if (GuestSnake == null)
@@ -384,11 +463,48 @@ public class GameState
             return;
         }
 
-        GuestSnake.Grow();
+        var points = eatenFood.Type == FoodType.Gold ? 3 : 1;
+        var growth = 1;
+
+        switch (eatenFood.Type)
+        {
+            case FoodType.Purple:
+                GuestPendingPerkChoice = true;
+                break;
+            case FoodType.Blue:
+                GuestShieldCharges++;
+                break;
+            case FoodType.Rainbow:
+                points += ApplyRainbowEffect(forGuest: true);
+                break;
+        }
+
+        foreach (var perk in GuestPerks)
+        {
+            points = perk.ModifyPoints(points, this);
+            growth = perk.ModifyGrowth(growth, this);
+        }
+
+        for (int i = 0; i < growth; i++)
+        {
+            GuestSnake.Grow();
+        }
         Foods.Remove(eatenFood);
         FoodsEaten++;
         SoundEvents.Add(eatenFood.Type == FoodType.Red ? SoundEvent.FoodEaten : SoundEvent.LuckyFood);
         EnsureFoodExists();
+
+        GuestLevelPoints += points;
+        if (GuestLevelPoints >= Settings.Current.PointsPerLevel)
+        {
+            GuestLevelPoints -= Settings.Current.PointsPerLevel;
+            GuestLevel++;
+            GuestPendingPerkChoice = true;
+            foreach (var perk in GuestPerks)
+            {
+                perk.OnLevelUp(this);
+            }
+        }
 
         if (GuestSnake.SnakeBodyParts.Count >= Settings.Current.TargetSnakeLength)
         {
@@ -489,22 +605,66 @@ public class GameState
         }
     }
 
-    // Simpler collision handling for the guest snake in LAN co-op - no perk-based survival.
-    // If the host is still alive, the session continues with the guest as a spectator.
-    private void TryResolveGuestCollisions()
+    // Mirrors TrySurviveCollisions(): the guest gets full perk-based survival parity with the
+    // host. If nothing saves it, the session continues with the guest as a spectator.
+    private void TryResolveGuestCollisions(Location previousTail)
     {
         if (GuestSnake == null)
         {
             return;
         }
 
-        var hitWall = GuestSnake.IsOutOfBounds();
-        var hitSelf = GuestSnake.HasCollidedWithItself();
-        var hitEnemy = GuestSnake.HasHitObstacle(EnemyCells);
-        var hitTree = !hitWall && Background.IsCanopyAt(GuestSnake.Head);
-        var hitHost = PlayerSnake.SnakeBodyParts.Any(bodyPart => bodyPart.Location.Equals(GuestSnake.Head));
+        var isGhost = GuestGhostTicksRemaining > 0;
+        var hasWoodpecker = GuestPerks.Any(perk => perk is WoodpeckerPerk);
+        var wasOutOfBounds = GuestSnake.IsOutOfBounds();
+        var hitWall = !isGhost && wasOutOfBounds;
+        var hitSelf = !isGhost && GuestSnake.HasCollidedWithItself();
+        var hitEnemy = !isGhost && GuestSnake.HasHitObstacle(EnemyCells);
+        var hitTree = !isGhost && !hasWoodpecker && !wasOutOfBounds && Background.IsCanopyAt(GuestSnake.Head);
+        var hitHost = !isGhost && PlayerSnake.SnakeBodyParts.Any(bodyPart => bodyPart.Location.Equals(GuestSnake.Head));
         if (!hitWall && !hitSelf && !hitEnemy && !hitTree && !hitHost)
         {
+            // A ghosted guest passing through the boundary wraps to the opposite edge, same as
+            // the host does - see WrapPlayerHeadAroundBounds.
+            if (wasOutOfBounds)
+            {
+                WrapGuestHeadAroundBounds();
+            }
+            return;
+        }
+
+        if (hitEnemy)
+        {
+            var spikyTail = GuestPerks.OfType<SpikyTailPerk>().FirstOrDefault(perk => perk.IsReady);
+            if (spikyTail != null)
+            {
+                var victim = FindEnemyAt(GuestSnake.Head);
+                GuestSnake.UndoMove(previousTail);
+                if (victim != null)
+                {
+                    KillEnemySnake(victim);
+                }
+                spikyTail.CooldownRemaining = spikyTail.CooldownTicks;
+                SoundEvents.Add(SoundEvent.ShieldAbsorbed);
+                return;
+            }
+        }
+
+        var ironHead = GuestPerks.OfType<IronHeadPerk>().FirstOrDefault(perk => perk.ShieldAvailable);
+        if (ironHead != null)
+        {
+            ironHead.ShieldAvailable = false;
+            GuestSnake.UndoMove(previousTail);
+            SoundEvents.Add(SoundEvent.ShieldAbsorbed);
+            return;
+        }
+
+        // A shield charge from a blue food absorbs the hit.
+        if (GuestShieldCharges > 0)
+        {
+            GuestShieldCharges--;
+            GuestSnake.UndoMove(previousTail);
+            SoundEvents.Add(SoundEvent.ShieldAbsorbed);
             return;
         }
 
@@ -515,6 +675,28 @@ public class GameState
         foreach (var bodyPart in GuestSnake.SnakeBodyParts)
         {
             VacatedLocations.Add(bodyPart.Location);
+        }
+    }
+
+    // Mirrors WrapPlayerHeadAroundBounds() for the guest snake.
+    private void WrapGuestHeadAroundBounds()
+    {
+        var head = GuestSnake!.Head;
+        if (head.X < 0)
+        {
+            head.X += Settings.Current.MapWidth;
+        }
+        else if (head.X >= Settings.Current.MapWidth)
+        {
+            head.X -= Settings.Current.MapWidth;
+        }
+        if (head.Y < 0)
+        {
+            head.Y += Settings.Current.MapHeight;
+        }
+        else if (head.Y >= Settings.Current.MapHeight)
+        {
+            head.Y -= Settings.Current.MapHeight;
         }
     }
 
@@ -662,12 +844,19 @@ public class GameState
     }
 
     // Rainbow food: one random effect; returns bonus level points (0 or 2).
-    private int ApplyRainbowEffect()
+    private int ApplyRainbowEffect(bool forGuest = false)
     {
         switch (Random.Shared.Next(4))
         {
             case 0:
-                GhostTicksRemaining = 15;
+                if (forGuest)
+                {
+                    GuestGhostTicksRemaining = 15;
+                }
+                else
+                {
+                    GhostTicksRemaining = 15;
+                }
                 return 0;
             case 1:
                 TimeWarpTicksRemaining = 30;
@@ -710,7 +899,12 @@ public class GameState
 
         if (PlayerSnake.Head.Equals(BirdLocation))
         {
-            CatchBird();
+            CatchBird(caughtByGuest: false);
+            return;
+        }
+        if (GuestSnake != null && GuestAlive && GuestSnake.Head.Equals(BirdLocation))
+        {
+            CatchBird(caughtByGuest: true);
             return;
         }
 
@@ -731,15 +925,26 @@ public class GameState
 
         if (PlayerSnake.Head.Equals(BirdLocation))
         {
-            CatchBird();
+            CatchBird(caughtByGuest: false);
+        }
+        else if (GuestSnake != null && GuestAlive && GuestSnake.Head.Equals(BirdLocation))
+        {
+            CatchBird(caughtByGuest: true);
         }
     }
 
-    // Catching the bird with your head grants an instant perk choice.
-    private void CatchBird()
+    // Catching the bird grants an instant perk choice to whichever snake caught it.
+    private void CatchBird(bool caughtByGuest)
     {
         BirdLocation = null;
-        PendingPerkChoice = true;
+        if (caughtByGuest)
+        {
+            GuestPendingPerkChoice = true;
+        }
+        else
+        {
+            PendingPerkChoice = true;
+        }
         SoundEvents.Add(SoundEvent.BirdCaught);
         ScheduleNextBird();
     }
@@ -784,6 +989,36 @@ public class GameState
             return;
         }
         typedLetters = "";
+    }
+
+    // Easter eggs typed during gameplay: purely cosmetic snake skins, independently toggleable
+    // from CheatsEnabled since these grant no gameplay advantage (unlike "god" or a real perk).
+    private void CheckEasterEggs(ConsoleKey pressedKey)
+    {
+        if (!Settings.Current.EasterEggsEnabled || pressedKey < ConsoleKey.A || pressedKey > ConsoleKey.Z)
+        {
+            return;
+        }
+
+        typedEasterEggLetters += char.ToLowerInvariant((char)pressedKey);
+        if (typedEasterEggLetters.Length > 7)
+        {
+            typedEasterEggLetters = typedEasterEggLetters[^7..];
+        }
+
+        if (typedEasterEggLetters.EndsWith("ghost"))
+        {
+            GhostSkinActive = !GhostSkinActive;
+        }
+        else if (typedEasterEggLetters.EndsWith("rainbow"))
+        {
+            RainbowSkinActive = !RainbowSkinActive;
+        }
+        else
+        {
+            return;
+        }
+        typedEasterEggLetters = "";
     }
 
     // Builds a lightweight sparse cell list of everything currently on the field - shared by the

@@ -202,14 +202,16 @@ namespace SnakeGameEngine
                 Console.WriteLine($" P. Points per level-up: {settings.PointsPerLevel}");
                 Console.WriteLine($" C. Perk choices per level-up: {settings.PerkChoicesPerLevel}");
                 Console.WriteLine($" L. Lose perks on death: {(settings.LosePerksOnDeath ? "On" : "Off")}");
+                Console.WriteLine($" K. Lose snake length on death: {(settings.LoseLengthOnDeath ? "On" : "Off")}");
                 Console.WriteLine($" B. Bird visits every N minutes (0 = never): {settings.BirdIntervalMinutes}");
                 Console.WriteLine($" S. Sound: {(settings.SoundEnabled ? "On" : "Off")}");
                 Console.WriteLine($" E. Cheat codes: {(settings.CheatsEnabled ? "On" : "Off")}");
+                Console.WriteLine($" G. Easter eggs (type ghost/rainbow in-game): {(settings.EasterEggsEnabled ? "On" : "Off")}");
                 Console.WriteLine(" R. Reset progress (perks + enemy profiles)");
                 Console.WriteLine(" X. Reset ALL settings to defaults");
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.WriteLine();
-                Console.WriteLine("Press a key to change a value (D/L/S/E/R/X act instantly), ESC to return...");
+                Console.WriteLine("Press a key to change a value (D/L/K/S/E/G/R/X act instantly), ESC to return...");
 
                 var key = Console.ReadKey(true).Key;
                 if (key == ConsoleKey.Escape)
@@ -237,6 +239,13 @@ namespace SnakeGameEngine
                     continue;
                 }
 
+                if (key == ConsoleKey.K)
+                {
+                    settings.LoseLengthOnDeath = !settings.LoseLengthOnDeath;
+                    settings.Save();
+                    continue;
+                }
+
                 if (key == ConsoleKey.S)
                 {
                     settings.SoundEnabled = !settings.SoundEnabled;
@@ -247,6 +256,13 @@ namespace SnakeGameEngine
                 if (key == ConsoleKey.E)
                 {
                     settings.CheatsEnabled = !settings.CheatsEnabled;
+                    settings.Save();
+                    continue;
+                }
+
+                if (key == ConsoleKey.G)
+                {
+                    settings.EasterEggsEnabled = !settings.EasterEggsEnabled;
                     settings.Save();
                     continue;
                 }
@@ -400,9 +416,9 @@ namespace SnakeGameEngine
                 Console.WriteLine();
                 Console.WriteLine("Enemy snakes:");
                 Console.WriteLine("-------------");
-                foreach (var profile in profiles.OrderByDescending(profile => profile.PlayerKills).ThenByDescending(profile => profile.Survivals))
+                foreach (var profile in profiles.OrderByDescending(profile => profile.Wins).ThenByDescending(profile => profile.PlayerKills))
                 {
-                    Console.WriteLine($"{profile.Name}: player kills: {profile.PlayerKills}, survivals: {profile.Survivals}, deaths: {profile.Deaths}");
+                    Console.WriteLine($"{profile.Name}: wins: {profile.Wins}, player kills: {profile.PlayerKills}, survivals: {profile.Survivals}, deaths: {profile.Deaths}");
                     if (profile.PerkNames.Count > 0)
                     {
                         Console.WriteLine($"   perks: {string.Join(", ", profile.PerkNames)}");

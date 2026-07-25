@@ -89,6 +89,28 @@ public class GameDrawable : IDrawable
             }
         }
 
+        // The connected Bluetooth guest's snake, cyan-phased so it's visually distinct from the
+        // host's own rainbow snake - mirrors Snake/ConsoleUtils/ConsoleDrawer.cs's guest block.
+        if (gameState.GuestSnake != null && gameState.GuestAlive)
+        {
+            var guestParts = gameState.GuestSnake.SnakeBodyParts;
+            var isGuestGhost = gameState.GuestGhostTicksRemaining > 0;
+            for (int i = 0; i < guestParts.Count; i++)
+            {
+                var (r, g, b) = isGuestGhost ? (200, 200, 255) : RainbowColor.Get(Environment.TickCount / 10 + 180 + i * 12);
+                canvas.FillColor = Color.FromRgb(r, g, b);
+                var rect = CellRect(guestParts[i].Location.X, guestParts[i].Location.Y);
+                if (i == 0)
+                {
+                    canvas.FillEllipse(rect);
+                }
+                else
+                {
+                    canvas.FillRoundedRectangle(rect, cellSize / 3);
+                }
+            }
+        }
+
         foreach (var food in gameState.Foods)
         {
             var (r, g, b) = food.Type switch

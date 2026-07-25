@@ -12,6 +12,6 @@ public class TailWhipPerk : Perk
 
     protected override void OnActivate(GameState gameState)
     {
-        gameState.TailWhip();
+        gameState.TailWhip(IsGuestOwned ? gameState.GuestSnake! : gameState.PlayerSnake);
     }
 }

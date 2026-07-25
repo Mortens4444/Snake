@@ -47,6 +47,14 @@ public class MultiplayerGuestRenderer
         ConsoleDrawer.DrawStatusLine(snapshot.StatusText);
     }
 
+    public static void DrawPerkCard(List<PerkOptionDto> choices, int level)
+    {
+        var options = choices
+            .Select(choice => (choice.Name, choice.Description, choice.ActivationKeyLabel))
+            .ToList();
+        ConsoleDrawer.DrawPerkCard(options, level);
+    }
+
     private static void DrawCell(CellDto cell)
     {
         Console.SetCursorPosition(cell.X + Constants.FieldOffsetX, cell.Y + Constants.FieldOffsetY);

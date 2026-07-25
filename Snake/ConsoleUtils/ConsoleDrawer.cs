@@ -1,10 +1,84 @@
 using SnakeGameEngine.Actors;
 using SnakeGameEngine.Moving;
+using SnakeGameEngine.Perks;
 
 namespace SnakeGameEngine.ConsoleUtils;
 
 public static class ConsoleDrawer
 {
+    // Non-blocking multiplayer perk card: unlike GameEngine.ShowPerkSelection (which owns the
+    // whole screen via Console.Clear()), this draws an overlay box on top of the live field and
+    // must be called again every iteration while the choice is pending - DrawFrame repaints the
+    // field underneath it every tick.
+    public static void DrawPerkCard(List<Perk> choices, int level)
+    {
+        var options = choices
+            .Select(perk => (perk.Name, perk.Description,
+                perk.ActivationKey == null ? "passive" : $"activate with {perk.ActivationKey}"))
+            .ToList();
+        DrawPerkCard(options, level);
+    }
+
+    internal static void DrawPerkCard(List<(string Name, string Description, string ActivationLabel)> options, int level)
+    {
+        var lines = new List<(string Text, ConsoleColor Color)>
+        {
+            ($"PERK TIME!  (Level {level})", ConsoleColor.Yellow)
+        };
+
+        if (options.Count == 0)
+        {
+            lines.Add(("You already own every perk.", ConsoleColor.White));
+        }
+        else
+        {
+            lines.Add(("Choose a perk:", ConsoleColor.White));
+            for (int i = 0; i < options.Count; i++)
+            {
+                var (name, description, activationLabel) = options[i];
+                lines.Add(($" {i + 1}. {name}  [{activationLabel}]", ConsoleColor.Cyan));
+                lines.Add(($"    {description}", ConsoleColor.Gray));
+            }
+            lines.Add(($"Press 1-{options.Count} to choose, ESC to skip", ConsoleColor.White));
+        }
+
+        var maxTotalWidth = Settings.Current.MapWidth;
+        var contentWidth = Math.Clamp(lines.Max(line => line.Text.Length), 10, maxTotalWidth - 4);
+        var totalWidth = contentWidth + 4;
+        var totalHeight = lines.Count + 2;
+
+        var left = Constants.FieldOffsetX + Math.Max(0, (Settings.Current.MapWidth - totalWidth) / 2);
+        var top = Constants.FieldOffsetY + Math.Max(0, (Settings.Current.MapHeight - totalHeight) / 2);
+
+        DrawCardBorder(left, top, contentWidth, '╔', '╗');
+        for (int i = 0; i < lines.Count; i++)
+        {
+            DrawCardContentLine(left, top + 1 + i, contentWidth, lines[i].Text, lines[i].Color);
+        }
+        DrawCardBorder(left, top + 1 + lines.Count, contentWidth, '╚', '╝');
+    }
+
+    private static void DrawCardBorder(int left, int row, int contentWidth, char leftCorner, char rightCorner)
+    {
+        Console.SetCursorPosition(left, row);
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.Write(leftCorner);
+        Console.Write(new string('═', contentWidth + 2));
+        Console.Write(rightCorner);
+    }
+
+    private static void DrawCardContentLine(int left, int row, int contentWidth, string text, ConsoleColor color)
+    {
+        var clipped = text.Length > contentWidth ? text[..contentWidth] : text.PadRight(contentWidth);
+        Console.SetCursorPosition(left, row);
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.Write("║ ");
+        Console.ForegroundColor = color;
+        Console.Write(clipped);
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.Write(" ║");
+    }
+
     public static void DrawScreen(GameState gameState)
     {
         var hueOffset = Environment.TickCount / 10;
@@ -22,11 +96,25 @@ public static class ConsoleDrawer
             }
         }
 
-        var isGhost = gameState.GhostTicksRemaining > 0;
+        var isGhost = gameState.GhostTicksRemaining > 0 || gameState.GhostSkinActive;
         var playerParts = gameState.PlayerSnake.SnakeBodyParts;
         for (int i = 0; i < playerParts.Count; i++)
         {
-            var color = isGhost ? GetGhostColor(i) : GradientWriter.GetRainbowColor(hueOffset + i * 12);
+            (int R, int G, int B) color;
+            if (isGhost)
+            {
+                color = GetGhostColor(i);
+            }
+            else if (gameState.RainbowSkinActive)
+            {
+                // The whole body pulses through the same hue together, instead of the subtle
+                // per-segment gradient every snake already has - a faster, showier cycle.
+                color = GradientWriter.GetRainbowColor(hueOffset * 4);
+            }
+            else
+            {
+                color = GradientWriter.GetRainbowColor(hueOffset + i * 12);
+            }
             DrawItem(playerParts[i], color);
         }
 

@@ -40,12 +40,20 @@ public class Settings
 
     public bool LosePerksOnDeath { get; set; }
 
+    // Defaults to true (unlike LosePerksOnDeath) so nobody's starting length changes unless they
+    // opt in - turning it off lets your snake's length carry over between games the same way
+    // perks already do, growing your starting length instead of always restarting at the minimum.
+    public bool LoseLengthOnDeath { get; set; } = true;
+
     // How often the catchable bird flies across; 0 = never.
     public int BirdIntervalMinutes { get; set; } = 3;
 
     public bool SoundEnabled { get; set; } = true;
 
     public bool CheatsEnabled { get; set; } = true;
+
+    // Separate from CheatsEnabled: these grant no gameplay advantage, just a cosmetic snake skin.
+    public bool EasterEggsEnabled { get; set; } = true;
 
     // Shown in the final ranking, the leaderboard, and to LAN guests when you win or kill them.
     public string PlayerName { get; set; } = "Player";

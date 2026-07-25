@@ -11,7 +11,7 @@ public class AppleMagnetPerk : Perk
 
     public override void OnTick(GameState gameState)
     {
-        var head = gameState.PlayerSnake.Head;
+        var head = IsGuestOwned ? gameState.GuestSnake!.Head : gameState.PlayerSnake.Head;
         foreach (var food in gameState.Foods)
         {
             var distance = BrainHelper.GetManhattanDistance(head, food.Location);

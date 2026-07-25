@@ -9,6 +9,10 @@ public class PlayerProgress
 
     public List<string> PerkNames { get; set; } = new();
 
+    // Carries the player's snake length into the next game, the same way perks do -
+    // reset back to the minimum on death unless Settings.LoseLengthOnDeath is turned off.
+    public int StartingLength { get; set; } = 2;
+
     public static PlayerProgress Load()
     {
         if (!File.Exists(FilePath))

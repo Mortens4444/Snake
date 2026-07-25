@@ -9,19 +9,21 @@ public class Snake
 
     public Direction Direction { get; set; } = Direction.Up;
 
-    public Snake()
-        : this(new Location(Settings.Current.MapWidth / 2, Settings.Current.MapHeight / 2))
+    // Used to spawn a second, network-controlled snake away from the host's starting cell.
+    public Snake(Location spawnHead)
+        : this(spawnHead, 2)
     {
     }
 
-    // Used to spawn a second, network-controlled snake away from the host's starting cell.
-    public Snake(Location spawnHead)
+    // Used for the player's snake, whose starting length can persist between games
+    // (see PlayerProgress.StartingLength) instead of always starting at the minimum.
+    public Snake(Location spawnHead, int length)
     {
-        SnakeBodyParts = new List<SnakeBodyPartInfo>
+        SnakeBodyParts = new List<SnakeBodyPartInfo> { new Head(spawnHead) };
+        for (int i = 1; i < Math.Max(length, 1); i++)
         {
-            new Head(spawnHead),
-            new SnakeBodyPartInfo(new Location(spawnHead.X, spawnHead.Y + 1))
-        };
+            SnakeBodyParts.Add(new SnakeBodyPartInfo(new Location(spawnHead.X, spawnHead.Y + i)));
+        }
     }
 
     public Location Head => SnakeBodyParts.First().Location;

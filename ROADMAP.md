@@ -65,7 +65,7 @@ a játékállapot (világ) és a kirajzolás szétválasztását. Ezért ez az a
 - [x] Ellenség-kígyók is gyűjtenek perkeket, állapotuk mentődik (fejlődő ellenségek).
   Evolúciós szabály: a túlélők megtartják és bővítik a perkjeiket, a halott kígyó elveszti őket.
 - [x] Beállítható halál-büntetés: elvesznek-e a perkek; teljes progress-reset opció a beállításokban.
-  (A hossz-nullázás kérdése a hossz-átvitellel együtt később.)
+  (A hossz-nullázás/hossz-átvitel a 8. fázisban megvalósult.)
 
 **Méret:** nagy, de a keretrendszer után az egyes perkek kicsik — jól darabolható.
 
@@ -140,6 +140,38 @@ a játékállapot (világ) és a kirajzolás szétválasztását. Ezért ez az a
   (konzol menü → D). A frissen teljesült feladatok a játék végi képernyőn is megjelennek.
 
 **Méret:** közepes.
+
+## 8. fázis – Hálózati perk-választás, hossz-átvitel, easter eggek, MAUI Bluetooth multiplayer
+
+- [x] Hálózati (LAN) perk-választás host+guest között, blokkolás nélkül: aki éppen választ, csak az
+  ő tick-szelete fagy le (`GameState.HostChoosingPerk`/`GuestChoosingPerk`), a világ többi része
+  (a másik kígyó, ellenségek, kaják, madár) valós időben megy tovább. A guest is kap perk-paritást
+  (11/15 perk, kék/szivárvány kaja, madár elkapás) — 4 perk (Amphibious, Berserk, Handbrake,
+  Kaméleon) host-only marad, mert a megosztott tick-ütemre/vadász-AI-ra épülnek, amivel a guestnek
+  nincs kapcsolata. Protokoll: `Messages.cs` új `PerkPick` üzenettípus, bővített `Input`/`Snapshot`.
+- [x] Hossz-átvitel: a kígyó hossza is megmarad meccsek között, ugyanúgy, ahogy eddig is a perkek —
+  `PlayerProgress.StartingLength`, „Lose snake length on death” beállítás (alapból bekapcsolva, hogy
+  senkinek ne változzon a viselkedése bekapcsolás nélkül).
+- [x] Ghost/Rainbow easter eggek: `ghost`/`rainbow` begépelve játék közben tisztán kozmetikai
+  kígyóbőrt kapcsol be/ki (nincs játékmenet-hatásuk, ellentétben a `god` cheattel) — külön
+  `EasterEggsEnabled` beállítással, a cheat-kapcsolótól függetlenül.
+- [x] Ellenfél „Wins” statisztika: eddig csak `Survivals`/`Deaths`/`PlayerKills` volt, most külön
+  számolva, hogy az ellenfél túlélt-e egy olyan meccset, amit a játékos elvesztett.
+- [x] MAUI Bluetooth multiplayer: a LAN-nal megegyező, változatlan vezetékes protokollra épül —
+  `BluetoothHost`/`BluetoothClient` (`Snake.Maui/Multiplayer`) egy `BleMessageStream` `Stream`
+  adapteren keresztül (Nordic UART Service UUID-hármas, saját darabolással a BLE GATT
+  írás/notify-korlátok miatt) futtatja ugyanazt a `NetworkProtocol` keretezést, amit a `LanHost`/
+  `LanClient` TCP fölött is használ. Csomag: `Shiny.BluetoothLE` (central) + `Shiny.BluetoothLE.Hosting`
+  (peripheral/GATT-szerver) + `Shiny.Hosting.Maui` (`.UseShiny()`).
+  **Ismert korlát:** ezt a részt **nem lehetett éles Bluetooth-hardveren tesztelni** — ehhez a
+  fejlesztői környezetben nincs elérhető Bluetooth-rádió/párosított eszköz. Minden MAUI
+  target framework (Android, iOS, MacCatalyst, Windows) fordítás-szinten ellenőrizve van, de a
+  tényleges rádiós működés (párosítás, GATT-időzítés, átviteli sebesség) csak valódi eszközön
+  derül ki — ehhez külön tesztelési kör kell két (vagy egy valós + egy emulált, ha az elérhető BLE
+  peripheral-módban) eszközzel.
+
+**Méret:** nagy — a Bluetooth-transzport (protokoll-kutatás + saját darabolás a BLE GATT korlátai
+miatt) volt a legnagyobb tétel.
 
 ## Nem kód jellegű tétel
 

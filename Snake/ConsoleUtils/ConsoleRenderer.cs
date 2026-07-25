@@ -109,6 +109,13 @@ public class ConsoleRenderer : IRenderer
             statusLine.Append($"  {perk.ActivationKey}-{perk.Name}{cooldown}");
         }
 
+        // Always false in single-player - this only ever fires in a LAN co-op session, where the
+        // guest freezing mid-choice would otherwise look like an unexplained stall on the host's screen.
+        if (gameState.GuestChoosingPerk)
+        {
+            statusLine.Append("  Guest is choosing a perk...");
+        }
+
         statusLine.Append("  P-Pause  ESC-Quit");
         return statusLine.ToString();
     }

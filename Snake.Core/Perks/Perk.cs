@@ -17,6 +17,14 @@ public abstract class Perk
 
     public bool IsReady => CooldownRemaining <= 0;
 
+    // Set once, when a perk instance is resolved into GameState.GuestPerks, so its hooks know
+    // to target the guest snake/timers instead of the host's.
+    public bool IsGuestOwned { get; set; }
+
+    // Perks that only work through a mechanism the guest doesn't have (see the specific
+    // override for why) opt out of the guest's choice pool via this.
+    public virtual bool IsEligibleForGuest => true;
+
     public void TryActivate(GameState gameState)
     {
         if (ActivationKey != null && IsReady)

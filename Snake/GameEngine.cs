@@ -63,6 +63,7 @@ namespace SnakeGameEngine
 
             if (gameState.Status == GameStatus.Won)
             {
+                SaveStartingLength(gameState, resetToMinimum: false);
                 ShowWinScreen(gameState, newlyCompletedChallenges);
             }
             else if (gameState.Status == GameStatus.GameOver)
@@ -71,12 +72,23 @@ namespace SnakeGameEngine
                 {
                     PlayerProgress.Reset();
                 }
+                SaveStartingLength(gameState, resetToMinimum: Settings.Current.LoseLengthOnDeath);
                 var lastKey = ShowGameOverScreen(gameState, newlyCompletedChallenges);
                 if (lastKey == ConsoleKey.R && gameState.ReplayFrames.Count > 0)
                 {
                     renderer.PlayReplay(gameState);
                 }
             }
+        }
+
+        // Carries the snake's length into the next game the same way perks already persist -
+        // called after PlayerProgress.Reset() above, if that ran, so the two death-penalty
+        // settings (perks vs. length) can be turned on/off independently of each other.
+        private static void SaveStartingLength(GameState gameState, bool resetToMinimum)
+        {
+            var progress = PlayerProgress.Load();
+            progress.StartingLength = resetToMinimum ? 2 : gameState.PlayerSnake.SnakeBodyParts.Count;
+            progress.Save();
         }
 
         // Compares before/after completion so the end screen can call out what was just achieved.
